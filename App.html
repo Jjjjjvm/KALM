@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>لغة برمجة عربية - بدون باك إند</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+  textarea { width: 100%; height: 200px; font-size: 16px; }
+  #output { background: #fff; padding: 10px; margin-top: 10px; min-height: 100px; white-space: pre-wrap; }
+  button { padding: 10px 20px; font-size: 16px; }
+</style>
+</head>
+<body>
+<h2>اكتب أوامرك بالعربية وشغلها (بدون باك إند)</h2>
+<textarea id="code" placeholder="اكتب هنا... مثال: &#10;عين س 5&#10;اطبع س&#10;جمع 3 4"></textarea><br/>
+<button onclick="تشغيل()">شغل</button>
+<div id="output"></div>
+
+<script>
+const المتغيرات = {};
+
+function تنفيذ_امر(سطر) {
+    const تقسيم = سطر.trim().split(" ");
+    if (تقسيم.length === 0) return "";
+
+    const الامر = تقسيم[0];
+    if (امر === "") return "";
+
+    if (الامر === "اطبع") {
+        let نص = تقسيم.slice(1).join(" ");
+        Object.keys(المتغيرات).forEach((مفتاح) => {
+            نص = نص.replaceAll(مفتاح, المتغيرات[مفتاح]);
+        });
+        return نص;
+    } else if (الامر === "جمع") {
+        if (تقسيم.length >= 3) {
+            let ن1 = isNaN(تقسيم[1]) ? المتغيرات[تقسيم[1]] || 0 : Number(تقسيم[1]);
+            let ن2 = isNaN(تقسيم[2]) ? المتغيرات[تقسيم[2]] || 0 : Number(تقسيم[2]);
+            return (ن1 + ن2).toString();
+        } else {
+            return "استخدم: جمع رقم1 رقم2";
+        }
+    } else if (الامر === "عين") {
+        if (تقسيم.length >= 3) {
+            const اسم = تقسيم[1];
+            const قيمة = isNaN(تقسيم[2]) ? تقسيم[2] : Number(تقسيم[2]);
+            المتغيرات[اسم] = قيمة;
+            return `تم تعيين ${اسم} = ${قيمة}`;
+        } else {
+            return "استخدم: عين اسم_المتغير القيمة";
+        }
+    } else {
+        return "أمر غير معروف";
+    }
+}
+
+function تشغيل() {
+    const كود = document.getElementById("code").value;
+    const أسطر = كود.split("\n");
+    let نتائج = [];
+
+    for (let سطر of أسطر) {
+        سطر = سطر.trim();
+        if (سطر.length > 0) {
+            const نتيجة = تنفيذ_امر(سطر);
+            نتائج.push(`>>> ${سطر}\n${نتيجة}`);
+        }
+    }
+
+    document.getElementById("output").textContent = نتائج.join("\n\n");
+}
+</script>
+
+</body>
+</html>
