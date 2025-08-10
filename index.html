@@ -18,18 +18,21 @@
         body {
             font-family: 'Cairo', sans-serif;
         }
+        /* جعل حاوية IDE قابلة للتمرير إذا تجاوزت محتواها الارتفاع المحدد */
         .ide-container {
-            height: 80vh; /* ارتفاع المحرر ليملأ الشاشة */
+            height: 80vh; 
+            overflow-y: auto; /* إضافة التمرير الرأسي للحاوية الرئيسية إذا لزم الأمر */
+            max-height: 80vh; /* تحديد أقصى ارتفاع */
         }
         .CodeMirror {
             direction: rtl !important;
             text-align: right !important;
-            height: 100% !important; /* تجعل المحرر يملأ المساحة المتاحة */
+            height: 100% !important; 
             font-size: 16px;
         }
         /* تغيير لون نصوص محرر CodeMirror إلى الرمادي */
         .CodeMirror-lines {
-            color: #a0a0a0 !important; /* لون رمادي للنصوص */
+            color: #a0a0a0 !important; 
         }
         .CodeMirror-gutters {
             background: #1e1e1e !important;
@@ -67,6 +70,7 @@
             padding: 0.5rem;
             display: flex;
             align-items: center;
+            flex-shrink: 0; /* منع الانكماش */
         }
         .input-container input {
             flex-grow: 1;
@@ -75,10 +79,10 @@
             padding: 0.5rem 0.75rem;
             border-radius: 0.25rem;
             color: #fff;
-            font-family: 'Cascadia Code', 'Fira Code', monospace; /* خط أحادي المسافة للمدخلات */
+            font-family: 'Cascadia Code', 'Fira Code', monospace; 
             font-size: 1rem;
             outline: none;
-            text-align: right; /* محاذاة النص لليمين */
+            text-align: right; 
         }
         .input-container input::placeholder {
             color: #888;
@@ -93,40 +97,47 @@
             <p class="text-gray-400 mt-1">بيئة تطوير متكاملة باللغة العربية</p>
         </header>
 
-        <!-- حاوية بيئة التطوير الشبيهة بـ VS Code -->
         <div class="ide-container flex flex-row bg-[#1e1e1e] rounded-lg shadow-2xl border border-gray-700 overflow-hidden">
             
-            <!-- المحتوى الرئيسي (المحرر والنتائج) -->
             <main class="flex flex-col flex-grow">
-                <!-- شريط علوي للمحرر -->
-                <div class="flex justify-between items-center bg-[#333333] p-2 border-b border-gray-700">
+                <!-- الشريط العلوي للمحرر (أزرار التشغيل، الحفظ، الفتح هنا) -->
+                <div class="flex justify-between items-center bg-[#333333] p-2 border-b border-gray-700 shrink-0">
                     <span class="text-sm text-gray-300">ملف: main.klm</span>
-                    <button id="runButton" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-5 rounded-md transition-all flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.118v3.764a1 1 0 001.555.832l3.197-1.882a1 1 0 000-1.664l-3.197-1.882z" clip-rule="evenodd"></path></svg>
-                        تشغيل
-                    </button>
+                    <div class="flex gap-2">
+                        <button id="openFileButton" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-md transition-all flex items-center gap-2 text-sm">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM13 7a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1zM13 15a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1z" /><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm0 6a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
+                            فتح ملف
+                        </button>
+                        <button id="saveFileButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-all flex items-center gap-2 text-sm">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16A8 8 0 0010 2zm1 11a1 1 0 10-2 0v-2H7a1 1 0 100 2H8v2a1 1 0 102 0v-2h1a1 1 0 100-2h-1V9a1 1 0 10-2 0v1H7a1 1 0 100 2h1v1z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M5 2a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2H5zm0 14V4h10v12H5z" clip-rule="evenodd" /></svg>
+                            حفظ الملف
+                        </button>
+                        <button id="runButton" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-5 rounded-md transition-all flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.118v3.764a1 1 0 001.555.832l3.197-1.882a1 1 0 000-1.664l-3.197-1.882z" clip-rule="evenodd"></path></svg>
+                            تشغيل
+                        </button>
+                    </div>
                 </div>
                 
-                <!-- منطقة محرر الكود -->
-                <div class="flex-grow relative">
+                <!-- منطقة محرر الكود - تأخذ 3/4 من المساحة وتسمح بالتمرير -->
+                <div class="flex-grow-[3] relative overflow-y-auto"> 
                     <textarea id="codeInput"></textarea>
                 </div>
 
-                <!-- منطقة النتائج (الطرفية) -->
-                <div class="h-1/3 flex flex-col border-t border-gray-700">
-                    <div class="bg-[#333333] p-2 text-sm font-semibold">
+                <!-- منطقة النتائج (الطرفية) - تأخذ 1/4 من المساحة وتسمح بالتمرير -->
+                <div class="flex-grow-[1] flex flex-col border-t border-gray-700"> 
+                    <div class="bg-[#333333] p-2 text-sm font-semibold shrink-0"> 
                         <h3 class="text-gray-300">النتائج</h3>
                     </div>
                     <pre id="output" class="flex-grow bg-[#1e1e1e] p-4 whitespace-pre-wrap text-right font-mono text-sm overflow-y-auto"></pre>
-                    <!-- حقل الإدخال الجديد يظهر هنا -->
-                    <div id="inputContainer" class="input-container hidden">
+                    <div id="inputContainer" class="input-container hidden shrink-0"> 
                         <input type="text" id="promptInput" dir="rtl" placeholder="اكتب هنا...">
                     </div>
                 </div>
             </main>
 
             <!-- الشريط الجانبي -->
-            <aside class="w-16 bg-[#252526] border-r border-gray-700 flex flex-col items-center py-4 space-y-6">
+            <aside class="w-16 bg-[#252526] border-r border-gray-700 flex flex-col items-center py-4 space-y-6 shrink-0">
                 <!-- أيقونات وهمية للشريط الجانبي -->
                 <div class="text-teal-400" title="الملفات">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
@@ -148,6 +159,7 @@
                 <p><strong>- المتغيرات:</strong> <code>متغير س = 10</code></p>
                 <p><strong>- الطباعة:</strong> <code>اطبع "أهلاً" + " " + "بالعالم"</code></p>
                 <p><strong>- الشروط:</strong> <code>اذا س > 5 نفذ { اطبع "س أكبر من 5" }</code></p>
+                <p class="text-red-400 font-bold"><strong>- الشروط (غير ذلك):</strong> <code>غير_ذلك { اطبع "س ليست أكبر من 5" }</code></p>
                 <p><strong>- التكرار:</strong> <code>كرر 3 مرات { اطبع "مرحباً رقم " + ت }</code></p>
                 <p class="text-teal-400 font-bold"><strong>- القوائم:</strong> <code>متغير فواكه = ["تفاح", "برتقال", "موز"]</code></p>
                 <p class="text-teal-400 font-bold"><strong>- الوصول لعناصر القائمة:</strong> <code>اطبع فواكه[0]</code></p>
@@ -159,6 +171,8 @@
                 <p class="text-green-400 font-bold"><strong>- عشوائي_عدد_صحيح:</strong> <code>عشوائي_عدد_صحيح(1, 10)</code> (عدد صحيح)</p>
                 <p class="text-yellow-400 font-bold"><strong>- التكرار الأبدي (بينما):</strong> <code>بينما شرط صحيح { ... }</code></p>
                 <p class="text-orange-400 font-bold"><strong>- فصل (كدالة نصية):</strong> <code>نص.فصل("فاصل")</code> أو <code>نص.فصل()</code> (لتقسيم النص)</p>
+                <p class="text-white font-bold"><strong>- القيم المنطقية:</strong> <code>صحيح</code>, <code>خطأ</code></p>
+                <p class="text-red-400 font-bold"><strong>- الخروج من حلقة (جديد):</strong> <code>اخرج</code></p>
             </div>
         </footer>
 
@@ -188,16 +202,20 @@
                         <li><p><strong>- المتغيرات:</strong> <code>متغير س = 10</code></p></li>
                         <li><p><strong>- الطباعة:</strong> <code>اطبع "أهلاً" + " " + "بالعالم"</code></p></li>
                         <li><p><strong>- الشروط:</strong> <code>اذا س > 5 نفذ { اطبع "س أكبر من 5" }</code></p></li>
-                        <li><p class="text-yellow-400 font-bold"><strong>- التكرار الأبدي (بينما):</strong> <code>بينما شرط صحيح { ... }</code></p></li>
-                        <li><p><strong>- القوائم:</strong> <code>متغير فواكه = ["تفاح", "برتقال", "موز"]</code></p></li>
-                        <li><p><strong>- الوصول لعناصر القائمة:</strong> <code>اطبع فواكه[0]</code></p></li>
-                        <li><p class="text-orange-400 font-bold"><strong>- فصل (كدالة نصية):</strong> <code>نص.فصل("فاصل")</code> أو <code>نص.فصل()</code> (لتقسيم النص)</p></li>
+                        <li><p class="text-red-400 font-bold"><strong>- الشروط (غير ذلك):</strong> <code>غير_ذلك { اطبع "س ليست أكبر من 5" }</code></p></li>
+                        <li><p><strong>- التكرار:</strong> <code>كرر 3 مرات { اطبع "مرحباً رقم " + ت }</code></p></li>
+                        <li><p class="text-teal-400 font-bold"><strong>- القوائم:</strong> <code>متغير فواكه = ["تفاح", "برتقال", "موز"]</code></p></li>
+                        <li><p class="text-teal-400 font-bold"><strong>- الوصول لعناصر القائمة:</strong> <code>اطبع فواكه[0]</code></p></li>
                         <li><p class="text-blue-400 font-bold"><strong>- تعريف الدوال:</strong> <code>دالة جمع(أ, ب) { اطبع أ + ب }</code></p></li>
                         <li><p class="text-blue-400 font-bold"><strong>- استدعاء الدوال:</strong> <code>جمع(5, 3)</code></p></li>
                         <li><p class="text-purple-400 font-bold"><strong>- الإدخال:</strong> <code>متغير قيمة = ادخل("أدخل نصاً: ")</code></p></li>
                         <li><p class="text-purple-400 font-bold"><strong>- الإدخال الشرطي:</strong> <code>متغير قيمة = ادخل("الرسالة_الأولى", "القيمة_المشغلة", "الرسالة_الثانية")</code></p></li>
                         <li><p class="text-green-400 font-bold"><strong>- عشوائي_بين:</strong> <code>عشوائي_بين(0, 1)</code> (عدد عشري)</p></li>
                         <li><p class="text-green-400 font-bold"><strong>- عشوائي_عدد_صحيح:</strong> <code>عشوائي_عدد_صحيح(1, 10)</code> (عدد صحيح)</p></li>
+                        <li><p class="text-yellow-400 font-bold"><strong>- التكرار الأبدي (بينما):</strong> <code>بينما شرط صحيح { ... }</code></p></li>
+                        <li><p class="text-orange-400 font-bold"><strong>- فصل (كدالة نصية):</strong> <code>نص.فصل("فاصل")</code> أو <code>نص.فصل()</code> (لتقسيم النص)</p></li>
+                        <li><p class="text-white font-bold"><strong>- القيم المنطقية:</strong> <code>صحيح</code>, <code>خطأ</code></p></li>
+                        <li><p class="text-red-400 font-bold"><strong>- الخروج من حلقة (جديد):</strong> <code>اخرج</code></p></li>
                     </ul>
                 </div>
             </div>
@@ -207,100 +225,20 @@
     </div>
 
     <script>
-        // --- إعداد محرر الكود ---
-        const editor = CodeMirror.fromTextArea(document.getElementById("codeInput"), {
-            lineNumbers: true,
-            mode: "javascript",
-            theme: "vscode-dark",
-            lineWrapping: true,
-        });
-        
-        // إزالة الكود الافتراضي لجعل المحرر يبدأ فارغًا
-        editor.setValue(``); 
+        // إعلان المتغيرات العامة التي ستستخدم للوصول إلى عناصر DOM
+        let editor;
+        let outputDiv;
+        let inputContainer;
+        let promptInput;
+        let resolveInputPromise;
 
-        // إضافة ميزة الإكمال التلقائي
-        editor.on('keypress', function(instance, event) {
-            const ch = event.key;
-            const pairs = {
-                '"': '"',
-                "'": "'",
-                '(': ')',
-                '[': ']',
-                '{': '}'
-            };
-
-            // إذا كان الحرف المدخل هو أحد الأحرف التي نريد إكمالها
-            if (pairs[ch]) {
-                const cursor = instance.getCursor();
-                const line = instance.getLine(cursor.line);
-                const charAfter = line.charAt(cursor.ch);
-
-                // إذا لم يكن هناك حرف إغلاق بالفعل بعد المؤشر، قم بالإكمال
-                if (charAfter !== pairs[ch]) {
-                    instance.replaceSelection(pairs[ch]); // أدخل الحرف المكمل
-                    instance.setCursor(cursor.line, cursor.ch); // أعد المؤشر إلى المنتصف
-                }
+        // تعريف استثناء مخصص لأمر 'اخرج'
+        class BreakLoop extends Error {
+            constructor() {
+                super("Break loop signal");
+                this.name = "BreakLoop";
             }
-        });
-
-        // --- المراجع لعناصر الواجهة ---
-        const runButton = document.getElementById('runButton');
-        const outputDiv = document.getElementById('output');
-        const settingsIcon = document.getElementById('settingsIcon');
-        const settingsModal = document.getElementById('settingsModal');
-        const closeModalButton = document.getElementById('closeModal');
-        const inputContainer = document.getElementById('inputContainer');
-        const promptInput = document.getElementById('promptInput');
-
-        let resolveInputPromise; // لتخزين وظيفة حل الوعد الخاص بالإدخال
-
-        // تشغيل الكود
-        runButton.addEventListener('click', async () => { // جعل المستمع غير متزامن
-            const code = editor.getValue();
-            outputDiv.textContent = ''; // مسح النتائج السابقة
-            const globalEnv = {};
-            try {
-                // استدعاء المترجم بشكل غير متزامن
-                await interpret(code, globalEnv); 
-            } catch (e) {
-                outputDiv.textContent += `\n❌ خطأ: ${e.message}\n${e.stack ? e.stack.split('\n')[1] : ''}`;
-            } finally {
-                // التأكد من إخفاء حقل الإدخال بعد الانتهاء (حتى لو حدث خطأ)
-                inputContainer.classList.add('hidden');
-            }
-        });
-
-        // فتح نافذة الإعدادات
-        settingsIcon.addEventListener('click', () => {
-            settingsModal.classList.remove('hidden');
-        });
-
-        // إغلاق نافذة الإعدادات
-        closeModalButton.addEventListener('click', () => {
-            settingsModal.classList.add('hidden');
-        });
-
-        // إغلاق النافذة بالنقر خارجها
-        settingsModal.addEventListener('click', (e) => {
-            if (e.target === settingsModal) {
-                settingsModal.classList.add('hidden');
-            }
-        });
-
-        // معالج حدث لإدخال المستخدم
-        promptInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault(); // منع إضافة سطر جديد في حقل الإدخال
-                const inputValue = promptInput.value;
-                outputDiv.textContent += inputValue + '\n'; // طباعة المدخل في منطقة النتائج
-                promptInput.value = ''; // مسح حقل الإدخال
-                inputContainer.classList.add('hidden'); // إخفاء الحقل
-                if (resolveInputPromise) {
-                    resolveInputPromise(inputValue); // حل الوعد بالقيمة المدخلة
-                    resolveInputPromise = null; // إعادة تعيين
-                }
-            }
-        });
+        }
 
         // دالة مساعدة لتحليل وسائط الدوال (تقسيم النصوص بالفاصل مع الحفاظ على الأقواس وعلامات الاقتباس)
         function parseArguments(argsContent) {
@@ -359,6 +297,116 @@
             return args;
         }
 
+        // دالة مساعدة لاستخراج نص كتلة (مثال: داخل { ... })
+        function extractBlockBody(lines, startLineIndex) {
+            let bodyLines = [];
+            let currentLineIndex = startLineIndex;
+            let openBracesCount = 0;
+
+            // البحث عن القوس الافتتاحي '{'
+            let firstBraceOnThisLine = lines[currentLineIndex].indexOf('{');
+            if (firstBraceOnThisLine === -1) {
+                throw new Error(`القوس '{' مفقود لتعريف الكتلة في السطر ${startLineIndex + 1}.`);
+            }
+
+            // التعامل مع الكتلة ذات السطر الواحد: { ... } على نفس السطر
+            let lastBraceOnThisLine = lines[currentLineIndex].lastIndexOf('}');
+            if (lastBraceOnThisLine !== -1 && lastBraceOnThisLine > firstBraceOnThisLine) {
+                return {
+                    body: lines[currentLineIndex].substring(firstBraceOnThisLine + 1, lastBraceOnThisLine).trim(),
+                    linesConsumed: 1
+                };
+            }
+            
+            // بداية الكتلة متعددة الأسطر
+            openBracesCount = 1; // حساب القوس المفتوح الذي وجدناه للتو
+            // إضافة ما بعد القوس المفتوح من السطر الحالي إلى نص الكتلة
+            if (firstBraceOnThisLine < lines[currentLineIndex].length - 1) {
+                bodyLines.push(lines[currentLineIndex].substring(firstBraceOnThisLine + 1));
+            }
+            
+            currentLineIndex++; // الانتقال إلى السطر التالي لبدء البحث عن القوس الإغلاقي
+
+            while (currentLineIndex < lines.length && openBracesCount > 0) {
+                const currentLineContent = lines[currentLineIndex];
+                const trimmedLine = currentLineContent.trim();
+
+                const bracesAdded = (trimmedLine.match(/\{/g) || []).length;
+                const bracesRemoved = (trimmedLine.match(/\}/g) || []).length;
+
+                openBracesCount += bracesAdded;
+                openBracesCount -= bracesRemoved;
+
+                if (openBracesCount === 0) {
+                    // هذا السطر يحتوي على القوس الإغلاقي النهائي للكتلة
+                    const contentBeforeBrace = trimmedLine.substring(0, trimmedLine.lastIndexOf('}')).trim();
+                    if (contentBeforeBrace.length > 0 || trimmedLine.lastIndexOf('}') === 0) { 
+                        bodyLines.push(contentBeforeBrace);
+                    }
+                    currentLineIndex++;
+                    break;
+                }
+                
+                bodyLines.push(currentLineContent);
+                currentLineIndex++;
+            }
+
+            if (openBracesCount > 0) {
+                throw new Error(`لم يتم إغلاق القوس '}' بشكل صحيح للكتلة التي تبدأ في السطر ${startLineIndex + 1}.`);
+            }
+            
+            // تصفية الأسطر الفارغة التي قد تنتج عن استخراج الأقواس
+            const finalBody = bodyLines.filter(line => line.trim() !== '').join('\n').trim();
+            return {
+                body: finalBody,
+                linesConsumed: currentLineIndex - startLineIndex
+            };
+        }
+
+
+        // دالة تحليل جملة اذا/غير_ذلك
+        function parseIfElseStatement(lines, startIndex) {
+            let currentLineIndex = startIndex;
+            const ifDefLine = lines[currentLineIndex].trim();
+            
+            const ifMatch = ifDefLine.match(/اذا\s+(.*?)\s+نفذ\s*\{/);
+            if (!ifMatch) {
+                throw new Error(`صيغة 'اذا' غير صحيحة في السطر ${startIndex + 1}.`);
+            }
+            const ifCondition = ifMatch[1].trim();
+
+            // استخراج نص كتلة 'اذا'
+            const ifBlockResult = extractBlockBody(lines, currentLineIndex);
+            const ifBody = ifBlockResult.body;
+            currentLineIndex += ifBlockResult.linesConsumed;
+            let totalLinesConsumed = ifBlockResult.linesConsumed;
+
+            let elseBody = null;
+
+            // التحقق من وجود كتلة 'غير_ذلك' مباشرة بعد كتلة 'اذا'
+            if (currentLineIndex < lines.length) {
+                const nextLine = lines[currentLineIndex].trim();
+                if (nextLine.startsWith('غير_ذلك')) {
+                    const elseMatch = nextLine.match(/غير_ذلك\s*\{/);
+                    if (!elseMatch) {
+                        throw new Error(`صيغة 'غير_ذلك' غير صحيحة في السطر ${currentLineIndex + 1}.`);
+                    }
+                    
+                    // استخراج نص كتلة 'غير_ذلك'
+                    const elseBlockResult = extractBlockBody(lines, currentLineIndex);
+                    elseBody = elseBlockResult.body;
+                    currentLineIndex += elseBlockResult.linesConsumed;
+                    totalLinesConsumed += elseBlockResult.linesConsumed;
+                }
+            }
+
+            return {
+                ifCondition: ifCondition,
+                ifBody: ifBody,
+                elseBody: elseBody,
+                linesConsumed: totalLinesConsumed
+            };
+        }
 
         // دالة المترجم الرئيسية (أصبحت غير متزامنة)
         async function interpret(code, env) {
@@ -371,6 +419,12 @@
                     i++;
                     continue;
                 }
+                
+                // *** إضافة معالجة لأمر 'اخرج' (Break Statement) ***
+                if (line === 'اخرج') {
+                    throw new BreakLoop(); // قم بإلقاء استثناء خاص لوقف الحلقة
+                }
+                // *************************************************
 
                 if (line.startsWith('اطبع')) {
                     const argsContent = line.substring(5).trim();
@@ -378,7 +432,13 @@
                     let evaluatedArgs = [];
 
                     for (const argExpr of parsedArgs) {
-                        evaluatedArgs.push(await evaluate(argExpr, env)); // انتظار تقييم كل جزء
+                        const evaluatedValue = await evaluate(argExpr, env);
+                        // Explicitly handle undefined/null for printing
+                        if (evaluatedValue === undefined || evaluatedValue === null) {
+                            evaluatedArgs.push("غير معرّف"); 
+                        } else {
+                            evaluatedArgs.push(evaluatedValue);
+                        }
                     }
                     
                     outputDiv.textContent += evaluatedArgs.map(val => {
@@ -431,37 +491,60 @@
                     }
                     i++;
                 }
+                // معالجة جمل 'اذا' و 'غير_ذلك' الجديدة
                 else if (line.startsWith('اذا')) {
-                    const { condition, body, linesConsumed } = parseBlock(lines, i, 'اذا');
-                    const conditionResult = await evaluate(condition, env); // انتظار تقييم الشرط
+                    const { ifCondition, ifBody, elseBody, linesConsumed } = parseIfElseStatement(lines, i);
+                    const conditionResult = await evaluate(ifCondition, env);
                     if (conditionResult) {
-                        await interpret(body, env); // انتظار تنفيذ الكتلة
+                        await interpret(ifBody, env);
+                    } else if (elseBody !== null && elseBody !== "") { // تحقق ما إذا كان هناك نص في كتلة else
+                        await interpret(elseBody, env);
                     }
-                    i += linesConsumed + 1;
+                    i += linesConsumed;
                 }
                 else if (line.startsWith('كرر')) {
                     const { condition, body, linesConsumed } = parseBlock(lines, i, 'كرر');
                     const count = parseInt(await evaluate(condition.split(' ')[0], env), 10); // انتظار تقييم عدد التكرارات
                     if (isNaN(count)) throw new Error("قيمة التكرار يجب أن تكون رقماً صحيحاً.");
                     
+                    // *** إضافة try-catch للتعامل مع BreakLoop في حلقة 'كرر' ***
                     for (let j = 0; j < count; j++) {
                         const loopEnv = { ...env, 'ت': j + 1 };
-                        await interpret(body, loopEnv); // انتظار تنفيذ كل تكرار
+                        try {
+                            await interpret(body, loopEnv);
+                        } catch (e) {
+                            if (e.name === "BreakLoop") {
+                                break; // يكسر الحلقة ويخرج منها
+                            } else {
+                                throw e; // يعيد إلقاء أي أخطاء أخرى
+                            }
+                        }
                     }
-                    i += linesConsumed + 1;
+                    // ********************************************************
+                    i += linesConsumed; // Changed to linesConsumed
                 }
                 // إضافة دعم لحلقة بينما (while loop)
                 else if (line.startsWith('بينما')) {
                     const { condition, body, linesConsumed } = parseBlock(lines, i, 'بينما');
-                    while (await evaluate(condition, env)) { // تكرار طالما الشرط صحيح
-                        await interpret(body, env);
+                    // *** إضافة try-catch للتعامل مع BreakLoop في حلقة 'بينما' ***
+                    try {
+                        while (await evaluate(condition, env)) { // تكرار طالما الشرط صحيح
+                            await interpret(body, env);
+                        }
+                    } catch (e) {
+                        if (e.name === "BreakLoop") {
+                            // تم كسر الحلقة، لا تفعل شيئاً، تابع تنفيذ الكود بعد الحلقة
+                        } else {
+                            throw e; // أعد إلقاء أي أخطاء أخرى
+                        }
                     }
-                    i += linesConsumed + 1;
+                    // ********************************************************
+                    i += linesConsumed; // Changed to linesConsumed
                 }
                 else if (line.startsWith('دالة')) {
                     const { name, params, body, linesConsumed } = parseFunctionDefinition(lines, i);
                     env[name] = { type: 'function', params, body, env };
-                    i += linesConsumed + 1;
+                    i += linesConsumed; // Changed to linesConsumed
                 }
                 // التعامل مع استدعاءات الدوال
                 else if (line.match(/^[a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*\s*\(.*\)/)) {
@@ -474,115 +557,178 @@
             }
         }
         
+        // دالة parseBlock الأصلية (لا تزال مستخدمة لـ 'كرر' و 'بينما')
         function parseBlock(lines, startIndex, keyword) {
             let line = lines[startIndex];
             let condition = "";
             let regex;
-            if (keyword === 'اذا') regex = /اذا\s+(.*?)\s+نفذ\s*\{/;
+            if (keyword === 'اذا') regex = /اذا\s+(.*?)\s+نفذ\s*\{/; // تم الإبقاء عليها ولكن لن تُستخدم مباشرة لـ 'اذا'
             else if (keyword === 'كرر') regex = /كرر\s+(.*?)\s+مرات\s*\{/;
-            else if (keyword === 'بينما') regex = /بينما\s+(.*?)\s*\{/; // Regex for while loop
+            else if (keyword === 'بينما') regex = /بينما\s+(.*?)\s*\{/;
             
             const match = line.match(regex);
-            if (!match) throw new Error(`صيغة '${keyword}' غير صحيحة.`);
+            if (!match) throw new Error(`صيغة '${keyword}' غير صحيحة في السطر ${startIndex + 1}.`);
             condition = match[1];
 
-            let openBraces = (line.match(/\{/g) || []).length;
-            let bodyLines = [];
-            let i = startIndex;
-            
-            if (openBraces === 0) {
-              i++;
-              if(!lines[i] || !lines[i].trim().startsWith('{')) throw new Error("القوس '{' مفقود بعد تعريف الكتلة.");
-              openBraces = 1;
-            }
-
-            i++;
-            while (i < lines.length && openBraces > 0) {
-                const currentLine = lines[i];
-                openBraces += (currentLine.match(/\{/g) || []).length;
-                openBraces -= (currentLine.match(/\}/g) || []).length;
-                if (openBraces > 0) {
-                    bodyLines.push(currentLine);
-                }
-                i++;
-            }
-            if (openBraces > 0) throw new Error("لم يتم إغلاق القوس '}' بشكل صحيح.");
-            
+            // استخدم دالة extractBlockBody الجديدة هنا
+            const blockResult = extractBlockBody(lines, startIndex);
             return {
                 condition: condition.trim(),
-                body: bodyLines.join('\n'),
-                linesConsumed: i - startIndex - 1
+                body: blockResult.body,
+                linesConsumed: blockResult.linesConsumed
             };
         }
 
         function parseFunctionDefinition(lines, startIndex) {
             const defLine = lines[startIndex];
             const match = defLine.match(/دالة\s+([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)\s*\((.*?)\)\s*\{/);
-            if (!match) throw new Error("صيغة تعريف الدالة غير صحيحة. استخدم: دالة اسم(معامل1, معامل2) { ... }");
+            if (!match) throw new Error("صيغة تعريف الدالة غير صحيحة. استخدم: دالة اسم(معامل1, معامل2) { ... } في السطر " + (startIndex + 1));
             const name = match[1];
             const params = match[2].split(',').map(p => p.trim()).filter(p => p);
             
-            let openBraces = (defLine.match(/\{/g) || []).length;
-            let bodyLines = [];
-            let i = startIndex;
-            
-            if (openBraces === 0) {
-              i++;
-              if(!lines[i] || !lines[i].trim().startsWith('{')) throw new Error("القوس '{' مفقود بعد تعريف الدالة.");
-              openBraces = 1;
-            }
-
-            i++;
-            while (i < lines.length && openBraces > 0) {
-                const currentLine = lines[i];
-                openBraces += (currentLine.match(/\{/g) || []).length;
-                openBraces -= (currentLine.match(/\}/g) || []).length;
-                if (openBraces > 0) {
-                    bodyLines.push(currentLine);
-                }
-                i++;
-            }
-            if (openBraces > 0) throw new Error(`لم يتم إغلاق القوس '}' للدالة '${name}'.`);
-
-            return { name, params, body: bodyLines.join('\n'), linesConsumed: i - startIndex - 1 };
+            // استخدم دالة extractBlockBody الجديدة هنا
+            const blockResult = extractBlockBody(lines, startIndex);
+            return {
+                name,
+                params,
+                body: blockResult.body,
+                linesConsumed: blockResult.linesConsumed
+            };
         }
+
 
         // دالة تقييم التعبيرات (أصبحت غير متزامنة)
         async function evaluate(expression, env) {
             expression = expression.trim();
 
-            // *** إضافة فحص محدد لرسالة الخطأ التي واجهتها سابقًا ***
-            const malformedStringRegex = /^""(?:[^"]*")*\.فصل\(/;
-            if (malformedStringRegex.test(expression)) {
-                throw new Error(`خطأ في الصيغة: يبدو أن هناك علامات اقتباس إضافية حول التعبير الذي تحاول فصله.
-                تأكد أن الصيغة هي: 'متغير = ادخل("الرسالة").فصل("الفاصل")'
-                أو 'متغير = "النص".فصل("الفاصل")'
-                وتجنب علامات الاقتباس المزدوجة الفارغة '""' في بداية التعبير.`);
+            if (expression === "") {
+                throw new Error(`خطأ: تم تمرير تعبير فارغ إلى المترجم.
+                يرجى التأكد من أن جميع التعبيرات (مثل قيم المتغيرات، أو الأجزاء بعد أو قبل العمليات الحسابية) غير فارغة وغير مكتملة.
+                قد يكون هذا بسبب:
+                1. محاولة استخدام عامل تشغيل (مثل +, -, *) بدون قيمة على أحد جانبيه.
+                2. وجود فراغات زائدة أو علامات غير مرئية تؤدي إلى تعبير فارغ بعد التنظيف.
+                3. محاولة الوصول إلى جزء غير موجود من قائمة أو متغير.
+                `);
             }
-            // *************************************************
 
-            // 1. Handle literals (strings, numbers) and simple variable access
+            if (expression === 'غير معرّف') return undefined;
+            if (expression === 'فارغ') return null;
+            if (expression === 'صحيح') return true;
+            if (expression === 'خطأ') return false;
+
+            const malformedStartingQuotesRegex = /^""(?!["']).*$/;
+            if (malformedStartingQuotesRegex.test(expression)) {
+                 throw new Error(`خطأ في الصيغة: يبدو أن التعبير يبدأ بعلامات اقتباس مزدوجة غير صحيحة أو غير مكتملة.
+                 تأكد من عدم وجود '""' إضافية في بداية السطر.
+                 الصيغة الصحيحة للنص تبدأ بـ '"' وتنتهي بـ '"'.
+                 الكود الذي تسبب بالخطأ: "${expression}"`);
+            }
+            
+            // --- NEW: Handle Array Access (e.g., list[index]) ---
+            const arrayAccessMatch = expression.match(/^(.*?)\[(.*?)\]$/);
+            if (arrayAccessMatch) {
+                const arrayExpr = arrayAccessMatch[1].trim();
+                const indexExpr = arrayAccessMatch[2].trim();
+
+                const array = await evaluate(arrayExpr, env); 
+                const index = await evaluate(indexExpr, env); 
+
+                if (!Array.isArray(array)) {
+                    throw new Error(`خطأ: المتغير '${arrayExpr}' ليس قائمة. لا يمكن الوصول للعناصر باستخدام الأقواس المربعة.`);
+                }
+                if (typeof index !== 'number' || !Number.isInteger(index)) {
+                    throw new Error(`خطأ: فهرس القائمة يجب أن يكون عدداً صحيحاً. القيمة المعطاة: '${indexExpr}' نتج عنها '${index}'`);
+                }
+                // JavaScript returns undefined for out-of-bounds access, we'll mimic that for reads
+                if (index < 0 || index >= array.length) {
+                     outputDiv.textContent += `\n⚠️ تحذير: فهرس القائمة خارج النطاق في التعبير '${expression}'. تم الوصول إلى العنصر ${index} من قائمة بحجم ${array.length}. قد يؤدي هذا إلى قيمة غير معرّفة.\n`;
+                }
+                return array[index]; 
+            }
+            // --- END NEW Array Access Handling ---
+
+            // معالجة عمليات الوصول للأعضاء (الدالة .method()) - يجب أن تكون هذه المعالجة بعد Array Access
+            const dotAccessMatch = expression.match(/^(.*?)\.([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)\((.*)\)$/);
+            if (dotAccessMatch) {
+                const objectExpr = dotAccessMatch[1].trim(); 
+                const methodName = dotAccessMatch[2];
+                const methodArgsString = dotAccessMatch[3];
+
+                const obj = await evaluate(objectExpr, env); 
+
+                if (typeof obj !== 'string') {
+                    throw new Error(`لا يمكن استدعاء الدالة '.${methodName}()' على قيمة ليست نصاً.
+                    القيمة التي تم العثور عليها هي: "${JSON.stringify(obj)}"
+                    تأكد أن الجزء الذي يسبق '.' هو متغير نصي أو ناتج دالة نصية (مثل 'ادخل()').`);
+                }
+
+                if (methodName === 'فصل') {
+                    const args = methodArgsString ? parseArguments(methodArgsString) : [];
+                    let result;
+                    if (args.length === 0) { 
+                        result = obj.trim().split(/\s+/).filter(s => s !== '');
+                    } else if (args.length === 1) { 
+                        const delimiter = await evaluate(args[0], env);
+                        if (typeof delimiter !== 'string') {
+                            throw new Error(`الفاصل لدالة '.فصل()' يجب أن يكون نصاً.`);
+                        }
+                        result = obj.split(delimiter);
+                    } else {
+                        throw new Error(`دالة '.فصل()' تتوقع صفر أو معامل واحد (الفاصل).`);
+                    }
+                    return result;
+                } else {
+                    throw new Error(`الدالة '${methodName}' غير معرفة أو غير مدعومة كدالة نصية.`);
+                }
+            }
+
+            const dotAccessNoParenMatch = expression.match(/^(.*?)\.([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)$/);
+            if (dotAccessNoParenMatch) {
+                const methodName = dotAccessNoParenMatch[2];
+                if (methodName === 'فصل') {
+                    throw new Error(`خطأ في الصيغة: يبدو أنك نسيت الأقواس '()' بعد دالة '.${methodName}'.
+                    الصيغة الصحيحة هي: 'متغير_نص.${methodName}()' أو 'ادخل("الرسالة").${methodName}()'`);
+                } else {
+                    throw new Error(`تعبير غير صالح: '.' يُستخدم لاستدعاء الدوال النصية فقط في لغة كَلِمْ (مثل .فصل()).
+                    تأكد من وجود أقواس '()' بعد اسم الدالة، أو أنك تستخدمها بشكل صحيح.`);
+                }
+            }
+            
+            // القيم الحرفية (النصوص، الأرقام) والوصول للمتغيرات البسيطة
             if (expression.startsWith('"') && expression.endsWith('"')) return expression.slice(1, -1);
             if (!isNaN(parseFloat(expression)) && isFinite(expression)) return Number(expression);
             if (env.hasOwnProperty(expression)) return env[expression];
 
-            // 2. Handle List Literals (e.g., ["a", "b"])
+            // القوائم الحرفية (مثال: ["a", "b"])
             if (expression.startsWith('[') && expression.endsWith(']')) {
                 const items = parseArguments(expression.slice(1, -1));
                 return await Promise.all(items.map(item => evaluate(item.trim(), env)));
             }
 
-            // 3. Handle Special Built-in Functions/Keywords
+            // الدوال المدمجة (مثل ادخل()، عشوائي_بين()، عشوائي_عدد_صحيح()) - يتم معالجتها هنا كاستدعاءات مستقلة
             if (expression.startsWith('ادخل(') && expression.endsWith(')')) {
                 const argsContent = expression.substring(5, expression.length - 1).trim();
                 const parsedArgs = parseArguments(argsContent);
 
-                if (parsedArgs.length < 1 || parsedArgs.length > 3) { // Now accepts 1 to 3 arguments
-                    throw new Error("دالة 'ادخل' تتوقع معامل واحد (رسالة مطالبة) أو ثلاثة معاملات (رسالة مطالبة, شرط, رسالة ثانية).");
+                if (parsedArgs.length < 1 || parsedArgs.length > 3) {
+                    throw new Error("دالة 'ادخل' تتوقع معامل واحد (رسالة مطالبة) أو ثلاثة معاملات (رسالة مطالبة, قيمة مشغلة, رسالة ثانية).");
                 }
 
                 const prompt1Expr = parsedArgs[0];
-                const evaluatedPrompt1 = prompt1Expr ? await evaluate(prompt1Expr, env) : '';
+                let evaluatedPrompt1;
+
+                if ((prompt1Expr.startsWith('"') && prompt1Expr.endsWith('"')) || (prompt1Expr.startsWith("'") && prompt1Expr.endsWith("'"))) {
+                    evaluatedPrompt1 = prompt1Expr.slice(1, -1);
+                } else {
+                    try {
+                        evaluatedPrompt1 = await evaluate(prompt1Expr, env);
+                        if (typeof evaluatedPrompt1 !== 'string') {
+                            throw new Error(`معامل دالة 'ادخل' الأول (رسالة المطالبة) يجب أن يكون نصاً أو متغيراً يحمل نصاً.`);
+                        }
+                    } catch (e) {
+                        throw new Error(`خطأ في معامل دالة 'ادخل' الأول: الرسالة المطالبة غير صالحة أو المتغير غير معرّف: "${prompt1Expr}". يرجى استخدام نص بين علامات اقتباس أو متغير معرف.`);
+                    }
+                }
 
                 outputDiv.textContent += (evaluatedPrompt1 || '') + '\n';
                 inputContainer.classList.add('hidden');
@@ -598,9 +744,22 @@
                     const prompt2Expr = parsedArgs[2];
 
                     const evaluatedTriggerValue = await evaluate(triggerValueExpr, env);
+                    let evaluatedPrompt2;
+
+                    if ((prompt2Expr.startsWith('"') && prompt2Expr.endsWith('"')) || (prompt2Expr.startsWith("'") && prompt2Expr.endsWith("'"))) {
+                        evaluatedPrompt2 = prompt2Expr.slice(1, -1);
+                    } else {
+                        try {
+                            evaluatedPrompt2 = await evaluate(prompt2Expr, env);
+                            if (typeof evaluatedPrompt2 !== 'string') {
+                                throw new Error(`معامل دالة 'ادخل' الثالث (الرسالة الثانية) يجب أن يكون نصاً أو متغيراً يحمل نصاً.`);
+                            }
+                        } catch (e) {
+                            throw new Error(`خطأ في معامل دالة 'ادخل' الثالث: الرسالة الثانية غير صالحة أو المتغير غير معرّف: "${prompt2Expr}". يرجى استخدام نص بين علامات اقتباس أو متغير معرف.`);
+                        }
+                    }
 
                     if (firstInput === evaluatedTriggerValue) {
-                        const evaluatedPrompt2 = await evaluate(prompt2Expr, env);
                         outputDiv.textContent += (evaluatedPrompt2 || '') + '\n';
                         inputContainer.classList.add('hidden');
                         promptInput.focus();
@@ -609,13 +768,12 @@
                             inputContainer.classList.remove('hidden');
                             resolveInputPromise = resolve;
                         });
-                        return secondInput; // Return the second input
+                        return secondInput;
                     }
                 }
-                return firstInput; // Return the first input if no condition met or not enough args
+                return firstInput;
             }
 
-            // Handle Random functions directly in evaluate
             if (expression.startsWith('عشوائي_بين(') && expression.endsWith(')')) {
                 const args = parseArguments(expression.substring('عشوائي_بين('.length, expression.length - 1));
                 if (args.length !== 2) throw new Error("صيغة دالة 'عشوائي_بين' غير صحيحة. استخدم: عشوائي_بين(الحد_الأدنى, الحد_الأقصى)");
@@ -638,56 +796,8 @@
                 return Math.floor(Math.random() * (max - min + 1)) + min;
             }
 
-            // 4. Handle Member Access (Dot Notation) - X.Y()
-            const dotAccessMatch = expression.match(/^(.*?)\.([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)\((.*)\)$/);
-            if (dotAccessMatch) {
-                const objectExpr = dotAccessMatch[1].trim(); // e.g., "ادخل(\"رسالة\")" or "متغير_نص"
-                const methodName = dotAccessMatch[2]; // e.g., "فصل"
-                const methodArgsString = dotAccessMatch[3]; // e.g., "\" \""
 
-                const obj = await evaluate(objectExpr, env); // Evaluate the object first
-
-                if (methodName === 'فصل') {
-                    if (typeof obj !== 'string') {
-                        throw new Error(`الدالة '.فصل()' يمكن استدعاؤها فقط على النصوص.`);
-                    }
-                    const args = methodArgsString ? parseArguments(methodArgsString) : [];
-
-                    let result;
-                    if (args.length === 0) { // No delimiter provided, split by whitespace
-                        // Simulating Python's split() with no arguments:
-                        // Splits by any whitespace and discards empty strings.
-                        result = obj.trim().split(/\s+/).filter(s => s !== '');
-                    } else if (args.length === 1) { // Delimiter provided
-                        const delimiter = await evaluate(args[0], env);
-                        if (typeof delimiter !== 'string') {
-                            throw new Error(`الفاصل لدالة '.فصل()' يجب أن يكون نصاً.`);
-                        }
-                        result = obj.split(delimiter);
-                    } else {
-                        throw new Error(`دالة '.فصل()' تتوقع صفر أو معامل واحد (الفاصل).`);
-                    }
-                    return result;
-                } else {
-                    throw new Error(`الدالة '${methodName}' غير معرفة أو غير مدعومة كدالة نصية.`);
-                }
-            }
-
-
-            // 5. Handle List Access - variable[index]
-            const listAccessMatch = expression.match(/(.*)\[(.*)\]/);
-            if (listAccessMatch) {
-                const listNameExpr = listAccessMatch[1].trim();
-                const indexExpr = listAccessMatch[2].trim();
-                const list = await evaluate(listNameExpr, env);
-                const index = await evaluate(indexExpr, env);
-
-                if (!Array.isArray(list)) throw new Error(`المتغير '${listNameExpr}' ليس قائمة.`);
-                if (typeof index !== 'number' || index < 0 || index >= list.length) throw new Error(`فهرس القائمة غير صالح.`);
-                return list[index];
-            }
-
-            // 6. Handle User-defined Function Calls - دالة_اسم(arg1, arg2)
+            // 6. استدعاءات الدوال المعرفة من قبل المستخدم - دالة_اسم(arg1, arg2)
             const funcCallMatch = expression.match(/^([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)\s*\((.*)\)$/);
             if (funcCallMatch) {
                 const funcName = funcCallMatch[1];
@@ -699,18 +809,17 @@
                     const funcEnv = { ...func.env };
                     func.params.forEach((param, index) => { funcEnv[param] = args[index]; });
                     await interpret(func.body, funcEnv);
-                    return; // Functions don't return values in this language, they just execute
+                    return; 
                 } else {
                     throw new Error(`الدالة '${funcName}' غير معرفة.`);
                 }
             }
 
-            // 7. Handle Operators (+, -, *, /, ==, >, <)
+            // 7. عوامل التشغيل (+, -, *, /, ==, >, <)
             const operators = ['==', '>', '<', '+', '-', '*', '/'];
             for (const op of operators) {
                 let lastOpIndex = expression.lastIndexOf(op);
                 if (lastOpIndex > -1) {
-                    // Make sure the operator is not inside a string literal or parentheses/brackets/braces
                     let balance = 0;
                     let inString = false;
                     let stringChar = '';
@@ -739,6 +848,19 @@
                         const leftExpr = expression.substring(0, lastOpIndex).trim();
                         const rightExpr = expression.substring(lastOpIndex + op.length).trim();
 
+                        if (leftExpr === "" && rightExpr === "") {
+                             throw new Error(`خطأ في الصيغة: عامل التشغيل '${op}' يتطلب تعبيرين صالحين على كلا الجانبين.
+                             مثال: '5 ${op} 3'`);
+                        }
+                        if (leftExpr === "") {
+                            throw new Error(`خطأ في الصيغة: تعبير الجانب الأيسر لعامل التشغيل '${op}' فارغ.
+                            مثال: 'قيمة ${op} 5'`);
+                        }
+                        if (rightExpr === "") {
+                            throw new Error(`خطأ في الصيغة: تعبير الجانب الأيمن لعامل التشغيل '${op}' فارغ.
+                            مثال: '5 ${op} قيمة'`);
+                        }
+
                         const left = await evaluate(leftExpr, env);
                         const right = await evaluate(rightExpr, env);
 
@@ -755,8 +877,156 @@
                 }
             }
 
+            // --- Enhanced Error Messaging for Unquoted Keywords ---
+            // If the expression is not a recognized literal (string, number, boolean)
+            // and not a defined variable, check if it's a known keyword that should be quoted.
+            if (typeof expression === 'string' && 
+                !expression.startsWith('"') && !expression.endsWith('"') &&
+                !expression.startsWith("'") && !expression.endsWith("'") &&
+                !parseFloat(expression) && !isFinite(expression) &&
+                !env.hasOwnProperty(expression)) {
+                
+                const commonKeywordsToQuote = ["اطبع", "ادخل", "متغير", "اذا", "نفذ", "كرر", "مرات", "بينما", "دالة", "اخرج", "صحيح", "خطأ", "غير_ذلك"]; // تم إضافة غير_ذلك
+                if (commonKeywordsToQuote.includes(expression)) {
+                    throw new Error(`خطأ في الصيغة: الكلمة '${expression}' يبدو أنها كلمة مفتاحية للغة كَلِمْ أو نص.
+                    إذا كنت تقصد نصاً، يرجى إحاطته بعلامات اقتباس مزدوجة (مثال: "${expression}").
+                    إذا كنت تقصد متغيراً، فتأكد من تعريفه مسبقاً.`);
+                }
+            }
+            // --- End Enhanced Error Messaging ---
+
             throw new Error(`تعبير غير صالح أو متغير غير معرّف: "${expression}"`);
         }
+        
+        // --- تهيئة محرر CodeMirror وعناصر الواجهة بعد تحميل DOM بالكامل ---
+        document.addEventListener('DOMContentLoaded', () => {
+            editor = CodeMirror.fromTextArea(document.getElementById("codeInput"), {
+                lineNumbers: true,
+                mode: "javascript",
+                theme: "vscode-dark",
+                lineWrapping: true,
+            });
+            
+            // تأكد من إزالة أي كود افتراضي
+            editor.setValue(``); 
+
+            // إضافة ميزة الإكمال التلقائي
+            editor.on('keypress', function(instance, event) {
+                const ch = event.key;
+                const pairs = {
+                    '"': '"',
+                    "'": "'",
+                    '(': ')',
+                    '[': ']',
+                    '{': '}'
+                };
+
+                if (pairs[ch]) {
+                    const cursor = instance.getCursor();
+                    const line = instance.getLine(cursor.line);
+                    const charAfter = line.charAt(cursor.ch);
+
+                    if (charAfter !== pairs[ch]) {
+                        instance.replaceSelection(pairs[ch]);
+                        instance.setCursor(cursor.line, cursor.ch);
+                    }
+                }
+            });
+
+            // --- المراجع لعناصر الواجهة (تم نقلها هنا لتأكيد الحصول على العناصر بعد تحميل DOM) ---
+            const runButton = document.getElementById('runButton');
+            const saveFileButton = document.getElementById('saveFileButton'); // زر حفظ الملف
+            const openFileButton = document.getElementById('openFileButton'); // زر فتح الملف
+
+            outputDiv = document.getElementById('output'); // أصبح متغير عام
+            const settingsIcon = document.getElementById('settingsIcon');
+            const settingsModal = document.getElementById('settingsModal');
+            const closeModalButton = document.getElementById('closeModal');
+            inputContainer = document.getElementById('inputContainer'); // أصبح متغير عام
+            promptInput = document.getElementById('promptInput'); // أصبح متغير عام
+
+            runButton.addEventListener('click', async () => {
+                const code = editor.getValue();
+                outputDiv.textContent = ''; 
+                const globalEnv = {};
+                try {
+                    await interpret(code, globalEnv); 
+                } catch (e) {
+                    if (e.name === "BreakLoop") {
+                        // هذا يعني أن أمر 'اخرج' تم تنفيذه، فقط اكمل بعد الحلقة
+                        outputDiv.textContent += "\n(تم إنهاء الحلقة بنجاح)";
+                    } else {
+                        outputDiv.textContent += `\n❌ خطأ: ${e.message}\n${e.stack ? e.stack.split('\n')[1] : ''}`;
+                    }
+                } finally {
+                    inputContainer.classList.add('hidden');
+                }
+            });
+
+            // إضافة وظيفة حفظ الملف
+            saveFileButton.addEventListener('click', () => {
+                const codeContent = editor.getValue();
+                const blob = new Blob([codeContent], { type: 'text/plain;charset=utf-8' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'script.klm'; // الاسم الافتراضي للملف
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            });
+
+            // إضافة وظيفة فتح الملف
+            openFileButton.addEventListener('click', () => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.klm'; // السماح فقط بملفات .klm
+                
+                fileInput.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            editor.setValue(event.target.result); // تحميل المحتوى إلى المحرر
+                        };
+                        reader.onerror = (event) => {
+                            outputDiv.textContent += `\n❌ خطأ في قراءة الملف: ${event.target.error.message}`;
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+                fileInput.click();
+            });
+
+
+            settingsIcon.addEventListener('click', () => {
+                settingsModal.classList.remove('hidden');
+            });
+
+            closeModalButton.addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+            });
+
+            settingsModal.addEventListener('click', (e) => {
+                if (e.target === settingsModal) {
+                    settingsModal.classList.add('hidden');
+                }
+            });
+
+            promptInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputValue = promptInput.value;
+                    outputDiv.textContent += inputValue + '\n';
+                    promptInput.value = '';
+                    inputContainer.classList.add('hidden');
+                    if (resolveInputPromise) {
+                        resolveInputPromise(inputValue);
+                        resolveInputPromise = null;
+                    }
+                }
+            });
+        }); // نهاية DOMContentLoaded
     </script>
 </body>
 </html>
