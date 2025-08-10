@@ -377,34 +377,52 @@
 
             // استخراج نص كتلة 'اذا'
             const ifBlockResult = extractBlockBody(lines, currentLineIndex);
-            const ifBody = ifBlockResult.body;
             currentLineIndex += ifBlockResult.linesConsumed;
             let totalLinesConsumed = ifBlockResult.linesConsumed;
 
             let elseBody = null;
 
-            // التحقق من وجود كتلة 'غير_ذلك' مباشرة بعد كتلة 'اذا'
-            if (currentLineIndex < lines.length) {
-                const nextLine = lines[currentLineIndex].trim();
+            // NEW: Skip empty lines and comments to find 'غير_ذلك'
+            let nextElseCandidateIndex = currentLineIndex;
+            while (nextElseCandidateIndex < lines.length) {
+                const candidateLine = lines[nextElseCandidateIndex].trim();
+                if (candidateLine === '' || candidateLine.startsWith('//')) {
+                    nextElseCandidateIndex++;
+                } else {
+                    break; // Found non-empty, non-comment line
+                }
+            }
+
+            // التحقق من وجود كتلة 'غير_ذلك' مباشرة بعد كتلة 'اذا' (مع تخطي الفراغات والتعليقات)
+            if (nextElseCandidateIndex < lines.length) {
+                const nextLine = lines[nextElseCandidateIndex].trim();
                 if (nextLine.startsWith('غير_ذلك')) {
                     const elseMatch = nextLine.match(/غير_ذلك\s*\{/);
                     if (!elseMatch) {
-                        throw new Error(`صيغة 'غير_ذلك' غير صحيحة في السطر ${currentLineIndex + 1}.`);
+                        throw new Error(`صيغة 'غير_ذلك' غير صحيحة في السطر ${nextElseCandidateIndex + 1}.`);
                     }
                     
                     // استخراج نص كتلة 'غير_ذلك'
-                    const elseBlockResult = extractBlockBody(lines, currentLineIndex);
+                    const elseBlockResult = extractBlockBody(lines, nextElseCandidateIndex);
                     elseBody = elseBlockResult.body;
-                    currentLineIndex += elseBlockResult.linesConsumed;
-                    totalLinesConsumed += elseBlockResult.linesConsumed;
+                    
+                    // Update currentLineIndex to be after the else block.
+                    // The total lines consumed for the if/else structure is from startIndex to this new currentLineIndex.
+                    currentLineIndex = nextElseCandidateIndex + elseBlockResult.linesConsumed;
+                } else {
+                    // If it's not 'غير_ذلك', then this line (and any subsequent ones) are not part of this if/else statement.
+                    currentLineIndex = nextElseCandidateIndex;
                 }
+            } else {
+                // No more lines after if block, so no else block.
+                currentLineIndex = nextElseCandidateIndex;
             }
 
             return {
                 ifCondition: ifCondition,
-                ifBody: ifBody,
+                ifBody: ifBlockResult.body,
                 elseBody: elseBody,
-                linesConsumed: totalLinesConsumed
+                linesConsumed: currentLineIndex - startIndex // Calculate total lines consumed by the entire if/else construct
             };
         }
 
