@@ -9,11 +9,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- CodeMirror لإضافة محرر كود احترافي -->
+    <!-- CodeMirror CSS لإضافة محرر كود احترافي -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/vscode-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <!-- CodeMirror CSS for autocompletion -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.css">
     <style>
         body {
             font-family: 'Cairo', sans-serif;
@@ -29,13 +29,14 @@
             text-align: right !important;
             height: 100% !important; 
             font-size: 16px;
+            background-color: #2e2e2e !important; /* لون رمادي للخلفية */
         }
         /* تغيير لون نصوص محرر CodeMirror إلى الرمادي */
         .CodeMirror-lines {
             color: #a0a0a0 !important; 
         }
         .CodeMirror-gutters {
-            background: #1e1e1e !important;
+            background: #2e2e2e !important; /* لون رمادي لأرقام الأسطر */
             border-left: 1px solid #333;
         }
         /* تصميم للنافذة المنبثقة (modal) */
@@ -87,6 +88,34 @@
         .input-container input::placeholder {
             color: #888;
         }
+        /* Highlight for error line */
+        .error-highlight {
+            background-color: rgba(255, 0, 0, 0.2) !important; /* Semi-transparent red */
+        }
+        .error-message-link {
+            color: #ff6b6b; /* Lighter red for clickable error text */
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .error-suggestion {
+            color: #ccc;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        /* Specific colors for function keywords - defined by custom Kalim mode */
+        .cm-s-vscode-dark .cm-function-keyword-dalla { color: #569cd6 !important; } /* Blue */
+        .cm-s-vscode-dark .cm-function-keyword-taareef { color: #4EC9B0 !important; } /* Teal */
+        .cm-s-vscode-dark .cm-function-keyword-fun { color: #D7BA7D !important; } /* Yellow/Gold */
+        
+        /* General styling for other CodeMirror tokens */
+        .cm-s-vscode-dark .cm-keyword { color: #C586C0; } /* Purple for other keywords */
+        .cm-s-vscode-dark .cm-string { color: #CE9178; } /* Orange for strings */
+        .cm-s-vscode-dark .cm-number { color: #B5CEA8; } /* Light green for numbers */
+        .cm-s-vscode-dark .cm-comment { color: #6A9955; } /* Green for comments */
+        .cm-s-vscode-dark .cm-operator { color: #D4D4D4; } /* White/light gray for operators */
+        .cm-s-vscode-dark .cm-bracket { color: #D4D4D4; } /* White/light gray for brackets */
+        .cm-s-vscode-dark .cm-variable { color: #9CDCFE; } /* Light blue for variables */
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200">
@@ -125,7 +154,7 @@
                 </div>
 
                 <!-- منطقة النتائج (الطرفية) - تأخذ 1/4 من المساحة وتسمح بالتمرير -->
-                <div class="flex-grow-[1] flex flex-col border-t border-gray-700"> 
+                <div id="outputContainer" class="flex flex-col border-t border-gray-700"> 
                     <div class="bg-[#333333] p-2 text-sm font-semibold shrink-0"> 
                         <h3 class="text-gray-300">النتائج</h3>
                     </div>
@@ -140,7 +169,7 @@
             <aside class="w-16 bg-[#252526] border-r border-gray-700 flex flex-col items-center py-4 space-y-6 shrink-0">
                 <!-- أيقونات وهمية للشريط الجانبي -->
                 <div class="text-teal-400" title="الملفات">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                    <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
                 </div>
                 <div class="text-gray-400 hover:text-teal-400 cursor-pointer" title="بحث">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -156,23 +185,39 @@
         <footer class="mt-8 text-center text-gray-500">
             <h3 class="font-bold text-xl mb-4 text-gray-400">دليل استخدام لغة كَلِمْ</h3>
             <div class="bg-[#252526] p-6 rounded-lg text-right space-y-2 max-w-4xl mx-auto border border-gray-700">
+                <p><strong>- التعليقات:</strong> <code># هذا تعليق بسطر واحد</code></p>
                 <p><strong>- المتغيرات:</strong> <code>متغير س = 10</code></p>
-                <p><strong>- الطباعة:</strong> <code>اطبع "أهلاً" + " " + "بالعالم"</code></p>
-                <p><strong>- الشروط:</strong> <code>اذا س > 5 نفذ { اطبع "س أكبر من 5" }</code></p>
-                <p class="text-red-400 font-bold"><strong>- الشروط (غير ذلك):</strong> <code>غير_ذلك { اطبع "س ليست أكبر من 5" }</code></p>
-                <p><strong>- التكرار:</strong> <code>كرر 3 مرات { اطبع "مرحباً رقم " + ت }</code></p>
-                <p class="text-teal-400 font-bold"><strong>- القوائم:</strong> <code>متغير فواكه = ["تفاح", "برتقال", "موز"]</code></p>
-                <p class="text-teal-400 font-bold"><strong>- الوصول لعناصر القائمة:</strong> <code>اطبع فواكه[0]</code></p>
-                <p class="text-blue-400 font-bold"><strong>- تعريف الدوال:</strong> <code>دالة جمع(أ, ب) { اطبع أ + ب }</code></p>
-                <p class="text-blue-400 font-bold"><strong>- استدعاء الدوال:</strong> <code>جمع(5, 3)</code></p>
-                <p class="text-purple-400 font-bold"><strong>- الإدخال:</strong> <code>متغير قيمة = ادخل("أدخل نصاً: ")</code></p>
-                <p class="text-purple-400 font-bold"><strong>- الإدخال الشرطي:</strong> <code>متغير قيمة = ادخل("الرسالة_الأولى", "القيمة_المشغلة", "الرسالة_الثانية")</code></p>
-                <p class="text-green-400 font-bold"><strong>- عشوائي_بين:</strong> <code>عشوائي_بين(0, 1)</code> (عدد عشري)</p>
-                <p class="text-green-400 font-bold"><strong>- عشوائي_عدد_صحيح:</strong> <code>عشوائي_عدد_صحيح(1, 10)</code> (عدد صحيح)</p>
-                <p class="text-yellow-400 font-bold"><strong>- التكرار الأبدي (بينما):</strong> <code>بينما شرط صحيح { ... }</code></p>
-                <p class="text-orange-400 font-bold"><strong>- فصل (كدالة نصية):</strong> <code>نص.فصل("فاصل")</code> أو <code>نص.فصل()</code> (لتقسيم النص)</p>
-                <p class="text-white font-bold"><strong>- القيم المنطقية:</strong> <code>صحيح</code>, <code>خطأ</code></p>
-                <p class="text-red-400 font-bold"><strong>- الخروج من حلقة (جديد):</strong> <code>اخرج</code></p>
+                <p><strong>- تحديث المتغيرات:</strong> <code>اسم_المدينة = "الرياض"</code></p>
+                <p><strong>- الطباعة:</strong> <code>اطبع("أهلاً بالعالم")</code></p>
+                <p><strong>- الشروط:</strong> <code>اذا س > 5 نفذ { ... } غير_ذلك { ... }</code></p>
+                <p><strong>- التكرار:</strong> <code>كرر 3 مرات { ... }</code></p>
+                <p><strong>- القوائم:</strong> <code>متغير فواكه = ["تفاح", "برتقال"]</code></p>
+                <p><strong>- الوصول لعناصر القائمة:</strong> <code>اطبع(فواكه[0])</code></p>
+                <p><strong>- تعريف الدوال (تصريح):</strong>
+                    <ul>
+                        <li><span style="color: #569cd6;"><code>دالة</code></span> <code>جمع(أ, ب) { ... }</code></li>
+                        <li><span style="color: #4EC9B0;"><code>تعريف</code></span> <code>ضرب(أ, ب) { ... }</code></li>
+                    </ul>
+                </p>
+                <p><strong>- تعريف الدوال (كتعبير - جديد!):</strong>
+                    <ul>
+                        <li><span style="color: #D7BA7D;"><code>fun</code></span> <code>(اسم_الدالة_الداخلية { ...كود_الدالة... })</code></li>
+                        <li>مثال: <code>متغير دالتي = fun(مهمتي { اطبع("مرحباً من دالتي!") })</code></li>
+                    </ul>
+                </p>
+                <p><strong>- استدعاء الدوال:</strong> <code>جمع(5, 3)</code></p>
+                <p><strong>- استدعاء دالة مخزنة (جديد!):</strong> <code>استدعاء(اسم_المتغير_الذي_يحتوي_الدالة)</code></p>
+                <p><strong>- الإدخال:</strong> <code>متغير قيمة = ادخل("أدخل نصاً: ")</code></p>
+                <p><strong>- الإدخال الشرطي:</strong> <code>متغير قيمة = ادخل("الرسالة_الأولى", "القيمة_المشغلة", "الرسالة_الثانية")</code></p>
+                <p><strong>- العمليات الحسابية:</strong> <code>العدد1 + العدد2</code>, <code>العدد1 - العدد2</code>, <code>العدد1 * العدد2</code>, <code>العدد1 / العدد2</code></p>
+                <p><strong>- عشوائي_بين:</strong> <code>عشوائي_بين(0, 1)</code></p>
+                <p><strong>- عشوائي_عدد_صحيح:</strong> <code>عشوائي_عدد_صحيح(1, 10)</code></p>
+                <p><strong>- التكرار الأبدي (بينما):</strong> <code>بينما شرط صحيح { ... }</code></p>
+                <p><strong>- فصل (كدالة نصية):</strong> <code>نص.فصل("فاصل")</code> أو <code>نص.فصل()</code></p>
+                <p><strong>- القيم المنطقية:</strong> <code>صحيح</code>, <code>خطأ</code></p>
+                <p><strong>- الخروج من حلقة:</strong> <code>اخرج</code></p>
+                <p><strong>- جلب بيانات:</strong> <code>متغير بيانات = جلب("URL")</code></p>
+                <p><strong>- الذكاء الاصطناعي:</strong> <code>اطبع(ذكاء_اصطناعي.توليد_نص("اكتب قصيدة عن الفضاء"))</code></p>
             </div>
         </footer>
 
@@ -199,23 +244,39 @@
                 <div>
                     <h4 class="text-lg font-semibold text-teal-300">دليل لغة كَلِمْ:</h4>
                     <ul class="list-disc list-inside text-gray-400 mr-4">
+                        <li><p><strong>- التعليقات:</strong> <code># هذا تعليق بسطر واحد</code></p></li>
                         <li><p><strong>- المتغيرات:</strong> <code>متغير س = 10</code></p></li>
-                        <li><p><strong>- الطباعة:</strong> <code>اطبع "أهلاً" + " " + "بالعالم"</code></p></li>
-                        <li><p><strong>- الشروط:</strong> <code>اذا س > 5 نفذ { اطبع "س أكبر من 5" }</code></p></li>
-                        <li><p class="text-red-400 font-bold"><strong>- الشروط (غير ذلك):</strong> <code>غير_ذلك { اطبع "س ليست أكبر من 5" }</code></p></li>
-                        <li><p><strong>- التكرار:</strong> <code>كرر 3 مرات { اطبع "مرحباً رقم " + ت }</code></p></li>
-                        <li><p class="text-teal-400 font-bold"><strong>- القوائم:</strong> <code>متغير فواكه = ["تفاح", "برتقال", "موز"]</code></p></li>
-                        <li><p class="text-teal-400 font-bold"><strong>- الوصول لعناصر القائمة:</strong> <code>اطبع فواكه[0]</code></p></li>
-                        <li><p class="text-blue-400 font-bold"><strong>- تعريف الدوال:</strong> <code>دالة جمع(أ, ب) { اطبع أ + ب }</code></p></li>
-                        <li><p class="text-blue-400 font-bold"><strong>- استدعاء الدوال:</strong> <code>جمع(5, 3)</code></p></li>
-                        <li><p class="text-purple-400 font-bold"><strong>- الإدخال:</strong> <code>متغير قيمة = ادخل("أدخل نصاً: ")</code></p></li>
-                        <li><p class="text-purple-400 font-bold"><strong>- الإدخال الشرطي:</strong> <code>متغير قيمة = ادخل("الرسالة_الأولى", "القيمة_المشغلة", "الرسالة_الثانية")</code></p></li>
-                        <li><p class="text-green-400 font-bold"><strong>- عشوائي_بين:</strong> <code>عشوائي_بين(0, 1)</code> (عدد عشري)</p></li>
-                        <li><p class="text-green-400 font-bold"><strong>- عشوائي_عدد_صحيح:</strong> <code>عشوائي_عدد_صحيح(1, 10)</code> (عدد صحيح)</p></li>
-                        <li><p class="text-yellow-400 font-bold"><strong>- التكرار الأبدي (بينما):</strong> <code>بينما شرط صحيح { ... }</code></p></li>
-                        <li><p class="text-orange-400 font-bold"><strong>- فصل (كدالة نصية):</strong> <code>نص.فصل("فاصل")</code> أو <code>نص.فصل()</code> (لتقسيم النص)</p></li>
-                        <li><p class="text-white font-bold"><strong>- القيم المنطقية:</strong> <code>صحيح</code>, <code>خطأ</code></p></li>
-                        <li><p class="text-red-400 font-bold"><strong>- الخروج من حلقة (جديد):</strong> <code>اخرج</code></p></li>
+                        <li><p><strong>- تحديث المتغيرات:</strong> <code>اسم_المدينة = "الرياض"</code></p></li>
+                        <li><p><strong>- الطباعة:</strong> <code>اطبع("أهلاً بالعالم")</code></p></li>
+                        <li><p><strong>- الشروط:</strong> <code>اذا س > 5 نفذ { ... } غير_ذلك { ... }</code></p></li>
+                        <li><p><strong>- التكرار:</strong> <code>كرر 3 مرات { ... }</code></p></li>
+                        <li><p><strong>- القوائم:</strong> <code>متغير فواكه = ["تفاح", "برتقال"]</code></p></li>
+                        <li><p><strong>- الوصول لعناصر القائمة:</strong> <code>اطبع(فواكه[0])</code></p></li>
+                        <li><p><strong>- تعريف الدوال (تصريح):</strong>
+                            <ul>
+                                <li><span style="color: #569cd6;"><code>دالة</code></span> <code>جمع(أ, ب) { ... }</code></li>
+                                <li><span style="color: #4EC9B0;"><code>تعريف</code></span> <code>ضرب(أ, ب) { ... }</code></li>
+                            </ul>
+                        </p></li>
+                        <li><p><strong>- تعريف الدوال (كتعبير - جديد!):</strong>
+                            <ul>
+                                <li><span style="color: #D7BA7D;"><code>fun</code></span> <code>(اسم_الدالة_الداخلية { ...كود_الدالة... })</code></li>
+                                <li>مثال: <code>متغير دالتي = fun(مهمتي { اطبع("مرحباً من دالتي!") })</code></li>
+                            </ul>
+                        </p></li>
+                        <li><p><strong>- استدعاء الدوال:</strong> <code>جمع(5, 3)</code></p></li>
+                        <li><p><strong>- استدعاء دالة مخزنة (جديد!):</strong> <code>استدعاء(اسم_المتغير_الذي_يحتوي_الدالة)</code></p></li>
+                        <li><p><strong>- الإدخال:</strong> <code>متغير قيمة = ادخل("أدخل نصاً: ")</code></p></li>
+                        <li><p><strong>- الإدخال الشرطي:</strong> <code>متغير قيمة = ادخل("الرسالة_الأولى", "القيمة_المشغلة", "الرسالة_الثانية")</code></p></li>
+                        <li><p><strong>- العمليات الحسابية:</strong> <code>العدد1 + العدد2</code>, <code>العدد1 - العدد2</code>, <code>العدد1 * العدد2</code>, <code>العدد1 / العدد2</code></p></li>
+                        <li><p><strong>- عشوائي_بين:</strong> <code>عشوائي_بين(0, 1)</code></p></li>
+                        <li><p><strong>- عشوائي_عدد_صحيح:</strong> <code>عشوائي_عدد_صحيح(1, 10)</code></p></li>
+                        <li><p><strong>- التكرار الأبدي (بينما):</strong> <code>بينما شرط صحيح { ... }</code></p></li>
+                        <li><p><strong>- فصل (كدالة نصية):</strong> <code>نص.فصل("فاصل")</code> أو <code>نص.فصل()</code></p></li>
+                        <li><p><strong>- القيم المنطقية:</strong> <code>صحيح</code>, <code>خطأ</code></p></li>
+                        <li><p><strong>- الخروج من حلقة:</strong> <code>اخرج</code></p></li>
+                        <li><p><strong>- جلب بيانات:</strong> <code>متغير بيانات = جلب("URL")</code></p></li>
+                        <li><p><strong>- الذكاء الاصطناعي:</strong> <code>اطبع(ذكاء_اصطناعي.توليد_نص("اكتب قصيدة عن الفضاء"))</code></p></li>
                     </ul>
                 </div>
             </div>
@@ -224,15 +285,84 @@
         </div>
     </div>
 
+    <!-- سكربتات CodeMirror والمنطق الخاص بنا -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <!-- تم إضافة هذا السطر: يوفر CodeMirror.defineSimpleMode -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/mode/simple.min.js"></script>
+    <!-- NEW: CodeMirror addon for automatic bracket closing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.js"></script>
+    <!-- CodeMirror addons for autocompletion -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.js"></script>
     <script>
-        // إعلان المتغيرات العامة التي ستستخدم للوصول إلى عناصر DOM
+        // تعريف وضع لغة 'كَلِمْ' المخصص
+        if (typeof CodeMirror !== 'undefined' && typeof CodeMirror.defineSimpleMode !== 'undefined') {
+            CodeMirror.defineSimpleMode("kalim", {
+              start: [
+                {regex: /(دالة)\b/, token: "function-keyword-dalla"},
+                {regex: /(تعريف)\b/, token: "function-keyword-taareef"},
+                {regex: /(fun)\b/, token: "function-keyword-fun"},
+                {regex: /(اذا|نفذ|كرر|مرات|بينما|اخرج|صحيح|خطأ|غير_ذلك|متغير|استدعاء)\b/, token: "keyword"}, 
+                {regex: /(اطبع|ادخل)\b/, token: "keyword special-function"}, 
+                {regex: /"(?:[^\\]|\\.)*?"/, token: "string"},
+                {regex: /'(?:[^\\]|\\.)*?'/, token: "string"},
+                {regex: /\b(0x[a-fA-F0-9]+|\d+\.?\d*([eE][-+]?\d+)?)\b/, token: "number"},
+                {regex: /\/\/.*$/, token: "comment"},
+                {regex: /#.*$/, token: "comment"},
+                {regex: /(=|\+|\-|\*|\/|==|>|<)/, token: "operator"},
+                {regex: /[\{\}\[\]\(\)]/, token: "bracket"},
+                {regex: /[a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*/, token: "variable"},
+                {regex: /./, token: null}
+              ],
+            });
+             console.log("CodeMirror 'kalim' mode defined successfully."); 
+        } else {
+            console.error("CodeMirror أو CodeMirror.defineSimpleMode غير معرف. لا يمكن تعريف وضع 'كَلِمْ'."); 
+        }
+    </script>
+    <script>
+        // KalimFunction class for first-class functions (fun expressions)
+        class KalimFunction {
+            constructor(internalName, params, body, closureEnv) {
+                this.type = 'function_value';
+                this.internalName = internalName; // The name for recursive calls within its body
+                this.params = params; // Parameters, if any, defined in the () of the fun expression
+                this.body = body;
+                this.closureEnv = closureEnv; // Environment where it was defined
+            }
+
+            async call(args, currentExecutingLineNumber) {
+                if (args.length !== this.params.length) {
+                    throw {
+                        message: `الدالة '${this.internalName || "مجهولة"}' تتوقع ${this.params.length} معاملات، ولكن تم تمرير ${args.length}.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد من تمرير العدد الصحيح من المعاملات للدالة.`
+                    };
+                }
+
+                const funcEnv = { ...this.closureEnv };
+                if (this.internalName) {
+                    funcEnv[this.internalName] = this;
+                }
+                this.params.forEach((param, index) => {
+                    funcEnv[param] = args[index];
+                });
+
+                await interpret(this.body, funcEnv);
+            }
+
+            toString() {
+                return `[fun: ${this.internalName || "مجهول"}]`;
+            }
+        }
+
         let editor;
         let outputDiv;
         let inputContainer;
         let promptInput;
         let resolveInputPromise;
+        let currentLineHighlight = null;
+        let globalEnv = {};
 
-        // تعريف استثناء مخصص لأمر 'اخرج'
         class BreakLoop extends Error {
             constructor() {
                 super("Break loop signal");
@@ -240,15 +370,91 @@
             }
         }
 
-        // دالة مساعدة لتحليل وسائط الدوال (تقسيم النصوص بالفاصل مع الحفاظ على الأقواس وعلامات الاقتباس)
+        async function get(url, lineNumber) {
+            if (typeof url !== 'string' || url.trim() === '') {
+                throw {
+                    message: `معامل دالة 'جلب' يجب أن يكون نصاً (URL) غير فارغ.`,
+                    lineNumber: lineNumber,
+                    suggestion: `تأكد من أن المعامل هو عنوان URL صحيح بين علامتي اقتباس، مثال: 'جلب("https://api.example.com")'.`
+                };
+            }
+            outputDiv.textContent += `جاري جلب بيانات من: ${url}\n`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw {
+                        message: `فشل جلب البيانات من ${url}. الحالة: ${response.status}`,
+                        lineNumber: lineNumber,
+                        suggestion: `تأكد من صحة عنوان URL وأن الخادم يعمل. قد تكون هناك مشكلة في الشبكة أو CORS (Cross-Origin Resource Sharing).`
+                    };
+                }
+                const data = await response.text();
+                outputDiv.textContent += `تم جلب البيانات بنجاح. طول البيانات: ${data.length} حرف.\n`;
+                return data;
+            } catch (error) {
+                throw {
+                    message: `خطأ أثناء جلب البيانات: ${error.message}`,
+                    lineNumber: lineNumber,
+                    suggestion: `تأكد من اتصالك بالإنترنت ومن صحة عنوان URL. إذا استمرت المشكلة، فقد تكون هناك مشكلة في خدمة API أو في مفتاح API (إذا كنت تستخدم مفتاحاً محدداً).`
+                };
+            }
+        }
+
+        async function generateAIContent(promptText, lineNumber) {
+            if (typeof promptText !== 'string' || promptText.trim() === '') {
+                throw {
+                    message: `معامل 'توليد_نص' يجب أن يكون نصاً غير فارغ.`,
+                    lineNumber: lineNumber,
+                    suggestion: `يرجى تزويد الدالة بنص واضح لإنشاء محتوى الذكاء الاصطناعي.`
+                };
+            }
+
+            outputDiv.textContent += "جاري توليد محتوى الذكاء الاصطناعي... قد يستغرق هذا بعض الوقت.\n";
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: promptText }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    outputDiv.textContent += `تم توليد المحتوى: ${text}\n`;
+                    return text;
+                } else {
+                    const errorDetails = JSON.stringify(result, null, 2);
+                    throw {
+                        message: `فشل توليد محتوى الذكاء الاصطناعي: استجابة غير متوقعة من API. التفاصيل: ${errorDetails}`,
+                        lineNumber: lineNumber,
+                        suggestion: `قد تكون مشكلة مؤقتة في الخدمة أو أن المدخل غير واضح للذكاء الاصطناعي. حاول مرة أخرى أو بمدخل مختلف. تأكد من أنك لم تتجاوز حدود استخدام API.`
+                    };
+                }
+            } catch (error) {
+                throw {
+                    message: `خطأ في الاتصال بخدمة الذكاء الاصطناعي: ${error.message}`,
+                    lineNumber: lineNumber,
+                    suggestion: `تأكد من اتصالك بالإنترنت. إذا استمرت المشكلة، فقد تكون هناك مشكلة في خدمة API أو في مفتاح API (إذا كنت تستخدم مفتاحاً محدداً).`
+                };
+            }
+        }
+
         function parseArguments(argsContent) {
             let args = [];
             let tempExpr = '';
-            let parenBalance = 0;    // لـ ()
-            let bracketBalance = 0;  // لـ []
-            let braceBalance = 0;    // لـ {}
-            let inString = false;    // لتحديد ما إذا كنا داخل سلسلة نصية
-            let stringChar = '';     // لتخزين نوع علامة الاقتباس (", ')
+            let parenBalance = 0;
+            let bracketBalance = 0;
+            let braceBalance = 0;
+            let inString = false;
+            let stringChar = '';
 
             for (let k = 0; k < argsContent.length; k++) {
                 const char = argsContent[k];
@@ -262,7 +468,7 @@
                         stringChar = char;
                     }
                     tempExpr += char;
-                } else if (inString) { // إذا كنا داخل سلسلة نصية، أضف الحرف مباشرةً
+                } else if (inString) {
                     tempExpr += char;
                 } else if (char === '(') {
                     parenBalance++;
@@ -283,33 +489,32 @@
                     braceBalance--;
                     tempExpr += char;
                 } else if (char === ',' && parenBalance === 0 && bracketBalance === 0 && braceBalance === 0) {
-                    // إذا وجدنا فاصلة وليست داخل أقواس أو علامات اقتباس، قم بإضافة التعبير
                     args.push(tempExpr.trim());
                     tempExpr = '';
                 } else {
                     tempExpr += char;
                 }
             }
-            // إضافة التعبير الأخير بعد الانتهاء من التحليل
             if (tempExpr.trim() !== '') {
                 args.push(tempExpr.trim());
             }
             return args;
         }
 
-        // دالة مساعدة لاستخراج نص كتلة (مثال: داخل { ... })
         function extractBlockBody(lines, startLineIndex) {
             let bodyLines = [];
             let currentLineIndex = startLineIndex;
             let openBracesCount = 0;
 
-            // البحث عن القوس الافتتاحي '{'
             let firstBraceOnThisLine = lines[currentLineIndex].indexOf('{');
             if (firstBraceOnThisLine === -1) {
-                throw new Error(`القوس '{' مفقود لتعريف الكتلة في السطر ${startLineIndex + 1}.`);
+                throw {
+                    message: `القوس '{' مفقود لتعريف الكتلة.`,
+                    lineNumber: startLineIndex + 1,
+                    suggestion: `تأكد أن كل كتلة (مثل 'اذا', 'كرر', 'بينما', 'دالة', 'تعريف', 'fun') تبدأ بقوس '{' بعد كلمة 'نفذ' أو الشرط مباشرة.`
+                };
             }
 
-            // التعامل مع الكتلة ذات السطر الواحد: { ... } على نفس السطر
             let lastBraceOnThisLine = lines[currentLineIndex].lastIndexOf('}');
             if (lastBraceOnThisLine !== -1 && lastBraceOnThisLine > firstBraceOnThisLine) {
                 return {
@@ -318,14 +523,12 @@
                 };
             }
             
-            // بداية الكتلة متعددة الأسطر
-            openBracesCount = 1; // حساب القوس المفتوح الذي وجدناه للتو
-            // إضافة ما بعد القوس المفتوح من السطر الحالي إلى نص الكتلة
+            openBracesCount = 1;
             if (firstBraceOnThisLine < lines[currentLineIndex].length - 1) {
                 bodyLines.push(lines[currentLineIndex].substring(firstBraceOnThisLine + 1));
             }
             
-            currentLineIndex++; // الانتقال إلى السطر التالي لبدء البحث عن القوس الإغلاقي
+            currentLineIndex++;
 
             while (currentLineIndex < lines.length && openBracesCount > 0) {
                 const currentLineContent = lines[currentLineIndex];
@@ -338,7 +541,6 @@
                 openBracesCount -= bracesRemoved;
 
                 if (openBracesCount === 0) {
-                    // هذا السطر يحتوي على القوس الإغلاقي النهائي للكتلة
                     const contentBeforeBrace = trimmedLine.substring(0, trimmedLine.lastIndexOf('}')).trim();
                     if (contentBeforeBrace.length > 0 || trimmedLine.lastIndexOf('}') === 0) { 
                         bodyLines.push(contentBeforeBrace);
@@ -352,10 +554,13 @@
             }
 
             if (openBracesCount > 0) {
-                throw new Error(`لم يتم إغلاق القوس '}' بشكل صحيح للكتلة التي تبدأ في السطر ${startLineIndex + 1}.`);
+                throw {
+                    message: `لم يتم إغلاق القوس '}' بشكل صحيح للكتلة.`,
+                    lineNumber: startLineIndex + 1,
+                    suggestion: `تأكد أن كل قوس '{' له قوس إغلاق مطابق '}'. راجع الكتلة التي تبدأ من هذا السطر.`
+                };
             }
             
-            // تصفية الأسطر الفارغة التي قد تنتج عن استخراج الأقواس
             const finalBody = bodyLines.filter(line => line.trim() !== '').join('\n').trim();
             return {
                 body: finalBody,
@@ -363,58 +568,55 @@
             };
         }
 
-
-        // دالة تحليل جملة اذا/غير_ذلك
         function parseIfElseStatement(lines, startIndex) {
             let currentLineIndex = startIndex;
             const ifDefLine = lines[currentLineIndex].trim();
             
             const ifMatch = ifDefLine.match(/اذا\s+(.*?)\s+نفذ\s*\{/);
             if (!ifMatch) {
-                throw new Error(`صيغة 'اذا' غير صحيحة في السطر ${startIndex + 1}.`);
+                throw {
+                    message: `صيغة 'اذا' غير صحيحة.`,
+                    lineNumber: startIndex + 1,
+                    suggestion: `تأكد من استخدام الصيغة الصحيحة: 'اذا [الشرط] نفذ { ... }'.`
+                };
             }
             const ifCondition = ifMatch[1].trim();
 
-            // استخراج نص كتلة 'اذا'
             const ifBlockResult = extractBlockBody(lines, currentLineIndex);
-            currentLineIndex += ifBlockResult.linesConsumed;
-            let totalLinesConsumed = ifBlockResult.linesConsumed;
+            currentLineIndex += ifBlockResult.linesConsumed; 
 
             let elseBody = null;
 
-            // NEW: Skip empty lines and comments to find 'غير_ذلك'
             let nextElseCandidateIndex = currentLineIndex;
             while (nextElseCandidateIndex < lines.length) {
                 const candidateLine = lines[nextElseCandidateIndex].trim();
-                if (candidateLine === '' || candidateLine.startsWith('//')) {
+                if (candidateLine === '' || candidateLine.startsWith('//') || candidateLine.startsWith('#')) {
                     nextElseCandidateIndex++;
                 } else {
-                    break; // Found non-empty, non-comment line
+                    break;
                 }
             }
 
-            // التحقق من وجود كتلة 'غير_ذلك' مباشرة بعد كتلة 'اذا' (مع تخطي الفراغات والتعليقات)
             if (nextElseCandidateIndex < lines.length) {
                 const nextLine = lines[nextElseCandidateIndex].trim();
                 if (nextLine.startsWith('غير_ذلك')) {
                     const elseMatch = nextLine.match(/غير_ذلك\s*\{/);
                     if (!elseMatch) {
-                        throw new Error(`صيغة 'غير_ذلك' غير صحيحة في السطر ${nextElseCandidateIndex + 1}.`);
+                        throw {
+                            message: `صيغة 'غير_ذلك' غير صحيحة.`,
+                            lineNumber: nextElseCandidateIndex + 1,
+                            suggestion: `يجب أن تتبع 'غير_ذلك' بـ '{' لفتح الكتلة. مثال: 'غير_ذلك { ... }'.`
+                        };
                     }
                     
-                    // استخراج نص كتلة 'غير_ذلك'
                     const elseBlockResult = extractBlockBody(lines, nextElseCandidateIndex);
                     elseBody = elseBlockResult.body;
                     
-                    // Update currentLineIndex to be after the else block.
-                    // The total lines consumed for the if/else structure is from startIndex to this new currentLineIndex.
                     currentLineIndex = nextElseCandidateIndex + elseBlockResult.linesConsumed;
                 } else {
-                    // If it's not 'غير_ذلك', then this line (and any subsequent ones) are not part of this if/else statement.
                     currentLineIndex = nextElseCandidateIndex;
                 }
             } else {
-                // No more lines after if block, so no else block.
                 currentLineIndex = nextElseCandidateIndex;
             }
 
@@ -422,36 +624,32 @@
                 ifCondition: ifCondition,
                 ifBody: ifBlockResult.body,
                 elseBody: elseBody,
-                linesConsumed: currentLineIndex - startIndex // Calculate total lines consumed by the entire if/else construct
+                linesConsumed: currentLineIndex - startIndex
             };
         }
 
-        // دالة المترجم الرئيسية (أصبحت غير متزامنة)
         async function interpret(code, env) {
             const lines = code.split('\n');
             let i = 0;
             while (i < lines.length) {
                 const line = lines[i].trim();
 
-                if (line.startsWith('//') || line === '') {
+                if (line.startsWith('//') || line.startsWith('#') || line === '') {
                     i++;
                     continue;
                 }
                 
-                // *** إضافة معالجة لأمر 'اخرج' (Break Statement) ***
                 if (line === 'اخرج') {
-                    throw new BreakLoop(); // قم بإلقاء استثناء خاص لوقف الحلقة
+                    throw new BreakLoop();
                 }
-                // *************************************************
 
-                if (line.startsWith('اطبع')) {
-                    const argsContent = line.substring(5).trim();
-                    const parsedArgs = parseArguments(argsContent); // استخدام الدالة المساعدة
+                if (line.startsWith('اطبع(') && line.endsWith(')')) {
+                    const argsContent = line.substring(line.indexOf('(') + 1, line.lastIndexOf(')')).trim();
+                    const parsedArgs = parseArguments(argsContent);
                     let evaluatedArgs = [];
 
                     for (const argExpr of parsedArgs) {
-                        const evaluatedValue = await evaluate(argExpr, env);
-                        // Explicitly handle undefined/null for printing
+                        const evaluatedValue = await evaluate(argExpr, env, i + 1);
                         if (evaluatedValue === undefined || evaluatedValue === null) {
                             evaluatedArgs.push("غير معرّف"); 
                         } else {
@@ -474,12 +672,13 @@
                 }
                 else if (line.match(/^متغير\s+.*/i) || line.match(/^[a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*\s*\[.*\]\s*=/i) || line.match(/^[a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*\s*=/i)) {
                     let varName, expression;
-                    let parts;
-
-                    // Improved splitting for variable assignment
                     const eqIndex = line.indexOf('=');
                     if (eqIndex === -1) {
-                        throw new Error(`خطأ في الصيغة: السطر ${i + 1} يتوقع علامة '=' لتعريف أو تعديل متغير. الكود هو: "${line}"`);
+                        throw {
+                            message: `خطأ في الصيغة: يتوقع علامة '=' لتعريف أو تعديل متغير.`,
+                            lineNumber: i + 1,
+                            suggestion: `تأكد من استخدام علامة الإسناد '=' بشكل صحيح. مثال: 'متغير س = 10' أو 'ص = "نص"'.`
+                        };
                     }
                     if (line.startsWith('متغير')) {
                         varName = line.substring(6, eqIndex).trim();
@@ -490,105 +689,150 @@
                     }
                     
                     if (!varName) {
-                        throw new Error(`خطأ في الصيغة: السطر ${i + 1} اسم المتغير لا يمكن أن يكون فارغاً. الكود هو: "${line}"`);
+                        throw {
+                            message: `اسم المتغير لا يمكن أن يكون فارغاً.`,
+                            lineNumber: i + 1,
+                            suggestion: `اختر اسماً صالحاً للمتغير قبل علامة '='.`
+                        };
                     }
                     if (!expression) {
-                        throw new Error(`خطأ في الصيغة: السطر ${i + 1} التعبير بعد '=' لا يمكن أن يكون فارغاً. الكود هو: "${line}"`);
+                        throw {
+                            message: `التعبير بعد علامة '=' لا يمكن أن يكون فارغاً.`,
+                            lineNumber: i + 1,
+                            suggestion: `أدخل قيمة أو تعبيراً صالحاً بعد علامة '='.`
+                        };
                     }
 
 
                     const listAccessMatch = varName.match(/(.*)\[(.*)\]/);
                     if (listAccessMatch) {
                         const listName = listAccessMatch[1].trim();
-                        const index = await evaluate(listAccessMatch[2].trim(), env); // انتظار تقييم الفهرس
-                        if (!env[listName] || !Array.isArray(env[listName])) throw new Error(`المتغير '${listName}' ليس قائمة.`);
-                        if (typeof index !== 'number') throw new Error(`فهرس القائمة يجب أن يكون رقماً.`);
-                        env[listName][index] = await evaluate(expression, env); // انتظار تقييم التعبير
+                        const index = await evaluate(listAccessMatch[2].trim(), env, i + 1);
+                        if (!env[listName] || !Array.isArray(env[listName])) throw {
+                            message: `المتغير '${listName}' ليس قائمة.`,
+                            lineNumber: i + 1,
+                            suggestion: `يمكنك الوصول لعناصر القائمة فقط باستخدام الأقواس المربعة. تأكد أن المتغير قائمة.`
+                        };
+                        if (typeof index !== 'number') throw {
+                            message: `فهرس القائمة يجب أن يكون رقماً.`,
+                            lineNumber: i + 1,
+                            suggestion: `تأكد أن الفهرس داخل الأقواس المربعة هو عدد صحيح (مثال: 'قائمة[0]').`
+                        };
+                        env[listName][index] = await evaluate(expression, env, i + 1);
                     } else {
-                        env[varName] = await evaluate(expression, env); // انتظار تقييم التعبير
+                        env[varName] = await evaluate(expression, env, i + 1);
                     }
                     i++;
                 }
-                // معالجة جمل 'اذا' و 'غير_ذلك' الجديدة
                 else if (line.startsWith('اذا')) {
                     const { ifCondition, ifBody, elseBody, linesConsumed } = parseIfElseStatement(lines, i);
-                    const conditionResult = await evaluate(ifCondition, env);
+                    const conditionResult = await evaluate(ifCondition, env, i + 1);
                     if (conditionResult) {
                         await interpret(ifBody, env);
-                    } else if (elseBody !== null && elseBody !== "") { // تحقق ما إذا كان هناك نص في كتلة else
+                    } else if (elseBody !== null && elseBody !== "") {
                         await interpret(elseBody, env);
                     }
                     i += linesConsumed;
                 }
                 else if (line.startsWith('كرر')) {
                     const { condition, body, linesConsumed } = parseBlock(lines, i, 'كرر');
-                    const count = parseInt(await evaluate(condition.split(' ')[0], env), 10); // انتظار تقييم عدد التكرارات
-                    if (isNaN(count)) throw new Error("قيمة التكرار يجب أن تكون رقماً صحيحاً.");
+                    const count = parseInt(await evaluate(condition.split(' ')[0], env, i + 1), 10);
+                    if (isNaN(count)) throw {
+                        message: `قيمة التكرار يجب أن تكون رقماً صحيحاً.`,
+                        lineNumber: i + 1,
+                        suggestion: `تأكد أن العدد بعد 'كرر' هو عدد صحيح (مثال: 'كرر 5 مرات { ... }').`
+                    };
                     
-                    // *** إضافة try-catch للتعامل مع BreakLoop في حلقة 'كرر' ***
                     for (let j = 0; j < count; j++) {
                         const loopEnv = { ...env, 'ت': j + 1 };
                         try {
                             await interpret(body, loopEnv);
                         } catch (e) {
                             if (e.name === "BreakLoop") {
-                                break; // يكسر الحلقة ويخرج منها
+                                break;
                             } else {
-                                throw e; // يعيد إلقاء أي أخطاء أخرى
+                                throw e;
                             }
                         }
                     }
-                    // ********************************************************
-                    i += linesConsumed; // Changed to linesConsumed
+                    i += linesConsumed;
                 }
-                // إضافة دعم لحلقة بينما (while loop)
                 else if (line.startsWith('بينما')) {
                     const { condition, body, linesConsumed } = parseBlock(lines, i, 'بينما');
-                    // *** إضافة try-catch للتعامل مع BreakLoop في حلقة 'بينما' ***
                     try {
-                        while (await evaluate(condition, env)) { // تكرار طالما الشرط صحيح
+                        while (await evaluate(condition, env, i + 1)) {
                             await interpret(body, env);
                         }
                     } catch (e) {
                         if (e.name === "BreakLoop") {
-                            // تم كسر الحلقة، لا تفعل شيئاً، تابع تنفيذ الكود بعد الحلقة
                         } else {
-                            throw e; // أعد إلقاء أي أخطاء أخرى
+                            throw e;
                         }
                     }
-                    // ********************************************************
-                    i += linesConsumed; // Changed to linesConsumed
+                    i += linesConsumed;
                 }
-                else if (line.startsWith('دالة')) {
+                else if (line.startsWith('دالة') || line.startsWith('تعريف')) {
                     const { name, params, body, linesConsumed } = parseFunctionDefinition(lines, i);
                     env[name] = { type: 'function', params, body, env };
-                    i += linesConsumed; // Changed to linesConsumed
+                    i += linesConsumed;
                 }
-                // التعامل مع استدعاءات الدوال
-                else if (line.match(/^[a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*\s*\(.*\)/)) {
-                    await evaluate(line, env); // انتظار تنفيذ استدعاء الدالة
+                // NEW: Handle 'استدعاء' command
+                else if (line.startsWith('استدعاء(') && line.endsWith(')')) {
+                    const funcNameToCallExpr = line.substring('استدعاء('.length, line.lastIndexOf(')')).trim();
+                    const funcToCall = await evaluate(funcNameToCallExpr, env, i + 1);
+
+                    if (funcToCall && funcToCall.type === 'function_value') {
+                        // Assuming استدعاء calls fun expressions without arguments for now
+                        await funcToCall.call([], i + 1); 
+                    } else {
+                        throw {
+                            message: `لا يمكن استدعاء '${funcNameToCallExpr}' لأنه ليس دالة قابلة للاستدعاء (من تعبير 'fun') أو غير معرّف.`,
+                            lineNumber: i + 1,
+                            suggestion: `تأكد من أن '${funcNameToCallExpr}' يشير إلى متغير يحتوي على دالة تم تعريفها باستخدام 'fun(...)'.`
+                        };
+                    }
+                    i++;
+                }
+                else if (line.startsWith('جلب(') && line.endsWith(')')) {
+                    const url = await evaluate(line.substring(line.indexOf('(') + 1, line.lastIndexOf(')')), env, i + 1);
+                    await env['جلب'](url, i + 1); 
+                    i++;
+                }
+                else if (line.startsWith('ذكاء_اصطناعي.توليد_نص(') && line.endsWith(')')) {
+                    const prompt = await evaluate(line.substring('ذكاء_اصطناعي.توليد_نص('.length, line.lastIndexOf(')')), env, i + 1);
+                    await env['ذكاء_اصطناعي'].توليد_نص(prompt, i + 1); 
+                    i++;
+                }
+                else if (line.match(/^[a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*\s*\((.*)\)/)) {
+                    await evaluate(line, env, i + 1);
                     i++;
                 }
                 else {
-                    throw new Error(`أمر غير معروف أو صيغة خاطئة في السطر ${i + 1}: "${line}"`);
+                    throw {
+                        message: `أمر غير معروف أو صيغة خاطئة.`,
+                        lineNumber: i + 1,
+                        suggestion: `تأكد من أن الأمر مكتوب بشكل صحيح وأنه جزء من الكلمات المفتاحية المدعومة (مثل 'متغير', 'اطبع', 'اذا', 'كرر', 'بينما', 'دالة', 'تعريف', 'fun', 'استدعاء', 'اخرج', 'جلب', 'ذكاء_اصناعي.توليد_نص').`
+                    };
                 }
             }
         }
         
-        // دالة parseBlock الأصلية (لا تزال مستخدمة لـ 'كرر' و 'بينما')
         function parseBlock(lines, startIndex, keyword) {
             let line = lines[startIndex];
             let condition = "";
             let regex;
-            if (keyword === 'اذا') regex = /اذا\s+(.*?)\s+نفذ\s*\{/; // تم الإبقاء عليها ولكن لن تُستخدم مباشرة لـ 'اذا'
+            if (keyword === 'اذا') regex = /اذا\s+(.*?)\s+نفذ\s*\{/;
             else if (keyword === 'كرر') regex = /كرر\s+(.*?)\s+مرات\s*\{/;
             else if (keyword === 'بينما') regex = /بينما\s+(.*?)\s*\{/;
             
             const match = line.match(regex);
-            if (!match) throw new Error(`صيغة '${keyword}' غير صحيحة في السطر ${startIndex + 1}.`);
+            if (!match) throw {
+                message: `صيغة '${keyword}' غير صحيحة.`,
+                lineNumber: startIndex + 1,
+                suggestion: `تأكد من أن الصيغة الصحيحة هي: '${keyword} [شرط أو عدد] { ... }'.`
+            };
             condition = match[1];
 
-            // استخدم دالة extractBlockBody الجديدة هنا
             const blockResult = extractBlockBody(lines, startIndex);
             return {
                 condition: condition.trim(),
@@ -599,12 +843,15 @@
 
         function parseFunctionDefinition(lines, startIndex) {
             const defLine = lines[startIndex];
-            const match = defLine.match(/دالة\s+([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)\s*\((.*?)\)\s*\{/);
-            if (!match) throw new Error("صيغة تعريف الدالة غير صحيحة. استخدم: دالة اسم(معامل1, معامل2) { ... } في السطر " + (startIndex + 1));
-            const name = match[1];
-            const params = match[2].split(',').map(p => p.trim()).filter(p => p);
+            const match = defLine.match(/(دالة|تعريف)\s+([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)\s*\((.*?)\)\s*\{/);
+            if (!match) throw {
+                message: `صيغة تعريف الدالة غير صحيحة.`,
+                lineNumber: startIndex + 1,
+                suggestion: `استخدم الصيغة: 'دالة اسم_الدالة(معامل1, معامل2) { ... }' أو 'تعريف اسم_الدالة(معامل1) { ... }'.`
+            };
+            const name = match[2];
+            const params = match[3].split(',').map(p => p.trim()).filter(p => p);
             
-            // استخدم دالة extractBlockBody الجديدة هنا
             const blockResult = extractBlockBody(lines, startIndex);
             return {
                 name,
@@ -614,19 +861,15 @@
             };
         }
 
-
-        // دالة تقييم التعبيرات (أصبحت غير متزامنة)
-        async function evaluate(expression, env) {
+        async function evaluate(expression, env, currentExecutingLineNumber) {
             expression = expression.trim();
 
             if (expression === "") {
-                throw new Error(`خطأ: تم تمرير تعبير فارغ إلى المترجم.
-                يرجى التأكد من أن جميع التعبيرات (مثل قيم المتغيرات، أو الأجزاء بعد أو قبل العمليات الحسابية) غير فارغة وغير مكتملة.
-                قد يكون هذا بسبب:
-                1. محاولة استخدام عامل تشغيل (مثل +, -, *) بدون قيمة على أحد جانبيه.
-                2. وجود فراغات زائدة أو علامات غير مرئية تؤدي إلى تعبير فارغ بعد التنظيف.
-                3. محاولة الوصول إلى جزء غير موجود من قائمة أو متغير.
-                `);
+                throw {
+                    message: `تعبير فارغ غير صالح.`,
+                    lineNumber: currentExecutingLineNumber,
+                    suggestion: `يرجى التأكد من أن جميع التعبيرات (مثل قيم المتغيرات، أو الأجزاء بعد أو قبل العمليات الحسابية) غير فارغة وغير مكتملة. قد يكون هذا بسبب عامل تشغيل بدون قيمة على أحد جانبيه.`
+                };
             }
 
             if (expression === 'غير معرّف') return undefined;
@@ -636,48 +879,137 @@
 
             const malformedStartingQuotesRegex = /^""(?!["']).*$/;
             if (malformedStartingQuotesRegex.test(expression)) {
-                 throw new Error(`خطأ في الصيغة: يبدو أن التعبير يبدأ بعلامات اقتباس مزدوجة غير صحيحة أو غير مكتملة.
-                 تأكد من عدم وجود '""' إضافية في بداية السطر.
-                 الصيغة الصحيحة للنص تبدأ بـ '"' وتنتهي بـ '"'.
-                 الكود الذي تسبب بالخطأ: "${expression}"`);
+                 throw {
+                     message: `صيغة نص غير صحيحة.`,
+                     lineNumber: currentExecutingLineNumber,
+                     suggestion: `تأكد من أن النص يبدأ بعلامة اقتباس واحدة (") أو ('). لا تستخدم علامات اقتباس مزدوجة في البداية '""'.`
+                 };
             }
             
-            // --- NEW: Handle Array Access (e.g., list[index]) ---
             const arrayAccessMatch = expression.match(/^(.*?)\[(.*?)\]$/);
             if (arrayAccessMatch) {
                 const arrayExpr = arrayAccessMatch[1].trim();
                 const indexExpr = arrayAccessMatch[2].trim();
 
-                const array = await evaluate(arrayExpr, env); 
-                const index = await evaluate(indexExpr, env); 
+                const array = await evaluate(arrayExpr, env, currentExecutingLineNumber); 
+                const index = await evaluate(indexExpr, env, currentExecutingLineNumber); 
 
                 if (!Array.isArray(array)) {
-                    throw new Error(`خطأ: المتغير '${arrayExpr}' ليس قائمة. لا يمكن الوصول للعناصر باستخدام الأقواس المربعة.`);
+                    throw {
+                        message: `المتغير '${arrayExpr}' ليس قائمة.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `لا يمكن الوصول لعناصر المتغيرات باستخدام الأقواس المربعة '[]' إلا إذا كانت قائمة (Array).`
+                    };
                 }
                 if (typeof index !== 'number' || !Number.isInteger(index)) {
-                    throw new Error(`خطأ: فهرس القائمة يجب أن يكون عدداً صحيحاً. القيمة المعطاة: '${indexExpr}' نتج عنها '${index}'`);
+                    throw {
+                        message: `فهرس القائمة يجب أن يكون رقماً صحيحاً.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد أن الفهرس داخل الأقواس المربعة هو عدد صحيح (مثال: 'قائمة[0]').`
+                    };
                 }
-                // JavaScript returns undefined for out-of-bounds access, we'll mimic that for reads
                 if (index < 0 || index >= array.length) {
-                     outputDiv.textContent += `\n⚠️ تحذير: فهرس القائمة خارج النطاق في التعبير '${expression}'. تم الوصول إلى العنصر ${index} من قائمة بحجم ${array.length}. قد يؤدي هذا إلى قيمة غير معرّفة.\n`;
+                     outputDiv.innerHTML += `<div style="color: #ffcc00;">⚠️ تحذير في السطر ${currentExecutingLineNumber}: فهرس القائمة خارج النطاق في التعبير '${expression}'. تم الوصول إلى العنصر ${index} من قائمة بحجم ${array.length}. قد يؤدي هذا إلى قيمة غير معرّفة.</div>`;
                 }
                 return array[index]; 
             }
-            // --- END NEW Array Access Handling ---
 
-            // معالجة عمليات الوصول للأعضاء (الدالة .method()) - يجب أن تكون هذه المعالجة بعد Array Access
+            // NEW: Handle 'fun' expressions
+            if (expression.startsWith('fun(')) {
+                const firstParen = expression.indexOf('(');
+                const bodyStartBrace = expression.indexOf('{', firstParen); 
+                if (firstParen === -1 || bodyStartBrace === -1) {
+                    throw {
+                        message: `صيغة دالة 'fun' غير صحيحة: أقواس أو كتلة مفقودة.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد من استخدام الصيغة: 'fun(اسم_الدالة { جسم_الدالة })'.`
+                    };
+                }
+
+                const funIdentifierPart = expression.substring(firstParen + 1, bodyStartBrace).trim();
+                const funIdentifierMatch = funIdentifierPart.match(/^([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)$/);
+                if (!funIdentifierMatch) {
+                     throw {
+                        message: `صيغة دالة 'fun' غير صحيحة: اسم الدالة الداخلي غير صالح.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد من أن اسم الدالة الداخلي بعد 'fun(' صالح ومفرد (مثال: 'fun(اسمي { ... })').`
+                    };
+                }
+                const internalName = funIdentifierMatch[1];
+
+                let braceBalance = 0;
+                let bodyEndIndex = -1;
+
+                for (let k = bodyStartBrace; k < expression.length; k++) {
+                    const char = expression[k];
+                    if (char === '{') {
+                        braceBalance++;
+                    } else if (char === '}') {
+                        braceBalance--;
+                    }
+                    if (braceBalance === 0 && char === '}') {
+                        bodyEndIndex = k;
+                        break;
+                    }
+                }
+
+                if (bodyEndIndex === -1) {
+                    throw {
+                        message: `صيغة دالة 'fun' غير صحيحة: قوس إغلاق '}' مفقود للكتلة.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد من أن كل قوس '{' لكتلة 'fun' له قوس إغلاق مطابق '}'.`
+                    };
+                }
+
+                const bodyContent = expression.substring(bodyStartBrace + 1, bodyEndIndex).trim();
+                
+                const remainingPart = expression.substring(bodyEndIndex + 1).trim();
+                if (remainingPart !== '') {
+                     throw {
+                        message: `صيغة دالة 'fun' غير صحيحة: توجد محتويات إضافية غير متوقعة بعد كتلة الدالة.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد أن لا يوجد شيء بعد قوس الإغلاق '}' الخاص بدالة 'fun'.`
+                    };
+                }
+
+                const params = [];
+                return new KalimFunction(internalName, params, bodyContent, env);
+            }
+
             const dotAccessMatch = expression.match(/^(.*?)\.([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)\((.*)\)$/);
             if (dotAccessMatch) {
                 const objectExpr = dotAccessMatch[1].trim(); 
                 const methodName = dotAccessMatch[2];
                 const methodArgsString = dotAccessMatch[3];
 
-                const obj = await evaluate(objectExpr, env); 
+                if (objectExpr === 'ذكاء_اصطناعي' && methodName === 'توليد_نص') {
+                    const args = parseArguments(methodArgsString);
+                    if (args.length !== 1) {
+                         throw {
+                            message: `دالة 'ذكاء_اصطناعي.توليد_نص' تتوقع معامل نصي واحد.`,
+                            lineNumber: currentExecutingLineNumber,
+                            suggestion: `استخدم الصيغة: 'ذكاء_اصطناعي.توليد_نص("نص المطالبة")'.`
+                        };
+                    }
+                    const prompt = await evaluate(args[0], env, currentExecutingLineNumber);
+                    if (typeof prompt !== 'string') {
+                         throw {
+                            message: `معامل دالة 'ذكاء_اصطناعي.توليد_نص' يجب أن يكون نصاً.`,
+                            lineNumber: currentExecutingLineNumber,
+                            suggestion: `تأكد من أن المطالبة هي نص بين علامتي اقتباس.`
+                        };
+                    }
+                    return await generateAIContent(prompt, currentExecutingLineNumber);
+                }
+
+                const obj = await evaluate(objectExpr, env, currentExecutingLineNumber); 
 
                 if (typeof obj !== 'string') {
-                    throw new Error(`لا يمكن استدعاء الدالة '.${methodName}()' على قيمة ليست نصاً.
-                    القيمة التي تم العثور عليها هي: "${JSON.stringify(obj)}"
-                    تأكد أن الجزء الذي يسبق '.' هو متغير نصي أو ناتج دالة نصية (مثل 'ادخل()').`);
+                    throw {
+                        message: `لا يمكن استدعاء الدالة '.${methodName}()' على قيمة ليست نصاً.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد أن الجزء الذي يسبق '.' هو متغير نصي أو ناتج دالة نصية (مثل 'ادخل()').`
+                    };
                 }
 
                 if (methodName === 'فصل') {
@@ -686,50 +1018,69 @@
                     if (args.length === 0) { 
                         result = obj.trim().split(/\s+/).filter(s => s !== '');
                     } else if (args.length === 1) { 
-                        const delimiter = await evaluate(args[0], env);
+                        const delimiter = await evaluate(args[0], env, currentExecutingLineNumber);
                         if (typeof delimiter !== 'string') {
-                            throw new Error(`الفاصل لدالة '.فصل()' يجب أن يكون نصاً.`);
+                            throw {
+                                message: `الفاصل لدالة '.فصل()' يجب أن يكون نصاً.`,
+                                lineNumber: currentExecutingLineNumber,
+                                suggestion: `معامل دالة 'فصل' يجب أن يكون نصاً يمثل الفاصل (مثال: 'نص.فصل(" ")').`
+                            };
                         }
                         result = obj.split(delimiter);
                     } else {
-                        throw new Error(`دالة '.فصل()' تتوقع صفر أو معامل واحد (الفاصل).`);
+                        throw {
+                            message: `دالة '.فصل()' تتوقع صفر أو معامل واحد (الفاصل).`,
+                            lineNumber: currentExecutingLineNumber,
+                            suggestion: `تأكد من تمرير معامل واحد فقط (الفاصل) أو لا شيء لدالة 'فصل'.`
+                        };
                     }
                     return result;
                 } else {
-                    throw new Error(`الدالة '${methodName}' غير معرفة أو غير مدعومة كدالة نصية.`);
+                    throw {
+                        message: `الدالة النصية '.${methodName}' غير معرفة أو غير مدعومة.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `الدوال النصية المدعومة حالياً هي 'فصل'. تأكد من كتابة اسم الدالة بشكل صحيح.`
+                    };
                 }
             }
 
             const dotAccessNoParenMatch = expression.match(/^(.*?)\.([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)$/);
             if (dotAccessNoParenMatch) {
                 const methodName = dotAccessNoParenMatch[2];
-                if (methodName === 'فصل') {
-                    throw new Error(`خطأ في الصيغة: يبدو أنك نسيت الأقواس '()' بعد دالة '.${methodName}'.
-                    الصيغة الصحيحة هي: 'متغير_نص.${methodName}()' أو 'ادخل("الرسالة").${methodName}()'`);
+                if (methodName === 'فصل' || dotAccessNoParenMatch[1] === 'ذكاء_اصطناعي' && methodName === 'توليد_نص') {
+                    throw {
+                        message: `خطأ في صيغة استدعاء الدالة '.${methodName}'.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `يبدو أنك نسيت الأقواس '()' بعد دالة '.${methodName}'. الصيغة الصحيحة هي: 'متغير_نص.${methodName}()' أو 'ذكاء_اصطناعي.توليد_نص("نص")'.`
+                    };
                 } else {
-                    throw new Error(`تعبير غير صالح: '.' يُستخدم لاستدعاء الدوال النصية فقط في لغة كَلِمْ (مثل .فصل()).
-                    تأكد من وجود أقواس '()' بعد اسم الدالة، أو أنك تستخدمها بشكل صحيح.`);
+                    throw {
+                        message: `تعبير غير صالح: '.' تُستخدم لاستدعاء الدوال النصية أو دوال المكتبات فقط.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد من وجود أقواس '()' بعد اسم الدالة، أو أنك تستخدمها بشكل صحيح مع الدوال النصية المدعومة (مثل 'فصل') أو دوال المكتبات (مثل 'ذكاء_اصطناعي.توليد_نص').`
+                    };
                 }
             }
             
-            // القيم الحرفية (النصوص، الأرقام) والوصول للمتغيرات البسيطة
             if (expression.startsWith('"') && expression.endsWith('"')) return expression.slice(1, -1);
             if (!isNaN(parseFloat(expression)) && isFinite(expression)) return Number(expression);
             if (env.hasOwnProperty(expression)) return env[expression];
 
-            // القوائم الحرفية (مثال: ["a", "b"])
             if (expression.startsWith('[') && expression.endsWith(']')) {
                 const items = parseArguments(expression.slice(1, -1));
-                return await Promise.all(items.map(item => evaluate(item.trim(), env)));
+                return await Promise.all(items.map(item => evaluate(item.trim(), env, currentExecutingLineNumber)));
             }
 
-            // الدوال المدمجة (مثل ادخل()، عشوائي_بين()، عشوائي_عدد_صحيح()) - يتم معالجتها هنا كاستدعاءات مستقلة
             if (expression.startsWith('ادخل(') && expression.endsWith(')')) {
                 const argsContent = expression.substring(5, expression.length - 1).trim();
                 const parsedArgs = parseArguments(argsContent);
 
                 if (parsedArgs.length < 1 || parsedArgs.length > 3) {
-                    throw new Error("دالة 'ادخل' تتوقع معامل واحد (رسالة مطالبة) أو ثلاثة معاملات (رسالة مطالبة, قيمة مشغلة, رسالة ثانية).");
+                    throw {
+                        message: `دالة 'ادخل' تتوقع معامل واحد أو ثلاثة معاملات.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `الصيغة الصحيحة هي: 'ادخل("رسالة")' أو 'ادخل("رسالة1", "قيمة مشغلة", "رسالة2")'.`
+                    };
                 }
 
                 const prompt1Expr = parsedArgs[0];
@@ -739,12 +1090,20 @@
                     evaluatedPrompt1 = prompt1Expr.slice(1, -1);
                 } else {
                     try {
-                        evaluatedPrompt1 = await evaluate(prompt1Expr, env);
+                        evaluatedPrompt1 = await evaluate(prompt1Expr, env, currentExecutingLineNumber);
                         if (typeof evaluatedPrompt1 !== 'string') {
-                            throw new Error(`معامل دالة 'ادخل' الأول (رسالة المطالبة) يجب أن يكون نصاً أو متغيراً يحمل نصاً.`);
+                            throw {
+                                message: `معامل دالة 'ادخل' الأول (رسالة المطالبة) يجب أن يكون نصاً.`,
+                                lineNumber: currentExecutingLineNumber,
+                                suggestion: `الرسالة المطلوبة يجب أن تكون نصاً بين علامتي اقتباس أو متغيراً يحمل نصاً.`
+                            };
                         }
                     } catch (e) {
-                        throw new Error(`خطأ في معامل دالة 'ادخل' الأول: الرسالة المطالبة غير صالحة أو المتغير غير معرّف: "${prompt1Expr}". يرجى استخدام نص بين علامات اقتباس أو متغير معرف.`);
+                        throw {
+                            message: `خطأ في معامل دالة 'ادخل' الأول: الرسالة المطالبة غير صالحة أو المتغير غير معرّف.`,
+                            lineNumber: currentExecutingLineNumber,
+                            suggestion: `الرسالة المطلوبة يجب أن تكون نصاً بين علامتي اقتباس أو متغيراً يحمل نصاً. تحقق من صحة التعبير.`
+                        };
                     }
                 }
 
@@ -761,19 +1120,27 @@
                     const triggerValueExpr = parsedArgs[1];
                     const prompt2Expr = parsedArgs[2];
 
-                    const evaluatedTriggerValue = await evaluate(triggerValueExpr, env);
+                    const evaluatedTriggerValue = await evaluate(triggerValueExpr, env, currentExecutingLineNumber);
                     let evaluatedPrompt2;
 
                     if ((prompt2Expr.startsWith('"') && prompt2Expr.endsWith('"')) || (prompt2Expr.startsWith("'") && prompt2Expr.endsWith("'"))) {
                         evaluatedPrompt2 = prompt2Expr.slice(1, -1);
                     } else {
                         try {
-                            evaluatedPrompt2 = await evaluate(prompt2Expr, env);
+                            evaluatedPrompt2 = await evaluate(prompt2Expr, env, currentExecutingLineNumber);
                             if (typeof evaluatedPrompt2 !== 'string') {
-                                throw new Error(`معامل دالة 'ادخل' الثالث (الرسالة الثانية) يجب أن يكون نصاً أو متغيراً يحمل نصاً.`);
+                                throw {
+                                    message: `معامل دالة 'ادخل' الثالث (الرسالة الثانية) يجب أن يكون نصاً.`,
+                                    lineNumber: currentExecutingLineNumber,
+                                    suggestion: `الرسالة الثانية يجب أن تكون نصاً بين علامتي اقتباس أو متغيراً يحمل نصاً.`
+                                };
                             }
                         } catch (e) {
-                            throw new Error(`خطأ في معامل دالة 'ادخل' الثالث: الرسالة الثانية غير صالحة أو المتغير غير معرّف: "${prompt2Expr}". يرجى استخدام نص بين علامات اقتباس أو متغير معرف.`);
+                            throw {
+                                message: `خطأ في معامل دالة 'ادخل' الثالث: الرسالة الثانية غير صالحة أو المتغير غير معرّف.`,
+                                lineNumber: currentExecutingLineNumber,
+                                suggestion: `الرسالة الثانية يجب أن تكون نصاً بين علامتي اقتباس أو متغيراً يحمل نصاً. تحقق من صحة التعبير.`
+                            };
                         }
                     }
 
@@ -794,221 +1161,272 @@
 
             if (expression.startsWith('عشوائي_بين(') && expression.endsWith(')')) {
                 const args = parseArguments(expression.substring('عشوائي_بين('.length, expression.length - 1));
-                if (args.length !== 2) throw new Error("صيغة دالة 'عشوائي_بين' غير صحيحة. استخدم: عشوائي_بين(الحد_الأدنى, الحد_الأقصى)");
-                const min = parseFloat(await evaluate(args[0], env));
-                const max = parseFloat(await evaluate(args[1], env));
+                if (args.length !== 2) throw {
+                    message: `صيغة دالة 'عشوائي_بين' غير صحيحة.`,
+                    lineNumber: currentExecutingLineNumber,
+                    suggestion: `استخدم الصيغة: 'عشوائي_بين(الحد_الأدنى, الحد_الأقصى)'.`
+                };
+                const min = parseFloat(await evaluate(args[0], env, currentExecutingLineNumber));
+                const max = parseFloat(await evaluate(args[1], env, currentExecutingLineNumber));
                 if (isNaN(min) || isNaN(max)) {
-                    throw new Error("معاملات دالة 'عشوائي_بين' يجب أن تكون أرقاماً.");
+                    throw {
+                        message: `معاملات دالة 'عشوائي_بين' يجب أن تكون أرقاماً.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد أن الحد الأدنى والحد الأقصى هما أرقام صالحة.`
+                    };
                 }
                 return Math.random() * (max - min) + min;
             }
 
             if (expression.startsWith('عشوائي_عدد_صحيح(') && expression.endsWith(')')) {
                 const args = parseArguments(expression.substring('عشوائي_عدد_صحيح('.length, expression.length - 1));
-                if (args.length !== 2) throw new Error("صيغة دالة 'عشوائي_عدد_صحيح' غير صحيحة. استخدم: عشوائي_عدد_صحيح(الحد_الأدنى, الحد_الأقصى)");
-                const min = parseInt(await evaluate(args[0], env), 10);
-                const max = parseInt(await evaluate(args[1], env), 10);
+                if (args.length !== 2) throw {
+                    message: `صيغة دالة 'عشوائي_عدد_صحيح' غير صحيحة.`,
+                    lineNumber: currentExecutingLineNumber,
+                    suggestion: `استخدم الصيغة: 'عشوائي_عدد_صحيح(الحد_الأدنى, الحد_الأقصى)'.`
+                };
+                const min = parseInt(await evaluate(args[0], env, currentExecutingLineNumber), 10);
+                const max = parseInt(await evaluate(args[1], env, currentExecutingLineNumber), 10);
                 if (isNaN(min) || isNaN(max)) {
-                    throw new Error("معاملات دالة 'عشوائي_عدد_صحيح' يجب أن تكون أرقاماً صحيحة.");
+                    throw {
+                        message: `معاملات دالة 'عشوائي_عدد_صحيح' يجب أن تكون أرقاماً صحيحة.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد أن الحد الأدنى والحد الأقصى هما أرقام صحيحة صالحة.`
+                    };
                 }
                 return Math.floor(Math.random() * (max - min + 1)) + min;
             }
 
 
-            // 6. استدعاءات الدوال المعرفة من قبل المستخدم - دالة_اسم(arg1, arg2)
             const funcCallMatch = expression.match(/^([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)\s*\((.*)\)$/);
             if (funcCallMatch) {
                 const funcName = funcCallMatch[1];
                 const argsString = funcCallMatch[2];
                 const func = env[funcName];
+
                 if (func && func.type === 'function') {
-                    const args = argsString ? await Promise.all(parseArguments(argsString).map(arg => evaluate(arg.trim(), env))) : [];
-                    if (args.length !== func.params.length) throw new Error(`الدالة '${funcName}' تتوقع ${func.params.length} معاملات، ولكن تم تمرير ${args.length}.`);
-                    const funcEnv = { ...func.env };
+                    const args = argsString ? await Promise.all(parseArguments(argsString).map(arg => evaluate(arg.trim(), env, currentExecutingLineNumber))) : [];
+                    if (args.length !== func.params.length) throw {
+                        message: `الدالة '${funcName}' تتوقع ${func.params.length} معاملات، ولكن تم تمرير ${args.length}.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد من تمرير العدد الصحيح من المعاملات للدالة '${funcName}'.`
+                    };
+                    const funcEnv = { ...env };
                     func.params.forEach((param, index) => { funcEnv[param] = args[index]; });
                     await interpret(func.body, funcEnv);
-                    return; 
+                    return;
+                } else if (func && func.type === 'function_value') {
+                    const args = argsString ? await Promise.all(parseArguments(argsString).map(arg => evaluate(arg.trim(), env, currentExecutingLineNumber))) : [];
+                    await func.call(args, currentExecutingLineNumber);
+                    return;
                 } else {
-                    throw new Error(`الدالة '${funcName}' غير معرفة.`);
+                    throw {
+                        message: `الدالة '${funcName}' غير معرفة أو لا يمكن استدعاؤها.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `تأكد من أن '${funcName}' تم تعريفها كدالة أو أنها تحمل قيمة دالة.`
+                    };
                 }
             }
 
-            // 7. عوامل التشغيل (+, -, *, /, ==, >, <)
-            const operators = ['==', '>', '<', '+', '-', '*', '/'];
-            for (const op of operators) {
-                let lastOpIndex = expression.lastIndexOf(op);
-                if (lastOpIndex > -1) {
-                    let balance = 0;
-                    let inString = false;
-                    let stringChar = '';
-                    let validOperator = false;
-                    for (let k = 0; k < expression.length; k++) {
-                        const char = expression[k];
-                        if (char === '"' || char === "'") {
-                            if (inString && char === stringChar) {
-                                inString = false;
-                                stringChar = '';
-                            } else if (!inString) {
-                                inString = true;
-                                stringChar = char;
-                            }
-                        } else if (!inString) {
-                            if (char === '(' || char === '[' || char === '{') balance++;
-                            else if (char === ')' || char === ']' || char === '}') balance--;
-                        }
-                        if (k === lastOpIndex && !inString && balance === 0) {
-                            validOperator = true;
-                            break;
-                        }
-                    }
-
-                    if (validOperator) {
-                        const leftExpr = expression.substring(0, lastOpIndex).trim();
-                        const rightExpr = expression.substring(lastOpIndex + op.length).trim();
-
-                        if (leftExpr === "" && rightExpr === "") {
-                             throw new Error(`خطأ في الصيغة: عامل التشغيل '${op}' يتطلب تعبيرين صالحين على كلا الجانبين.
-                             مثال: '5 ${op} 3'`);
-                        }
-                        if (leftExpr === "") {
-                            throw new Error(`خطأ في الصيغة: تعبير الجانب الأيسر لعامل التشغيل '${op}' فارغ.
-                            مثال: 'قيمة ${op} 5'`);
-                        }
-                        if (rightExpr === "") {
-                            throw new Error(`خطأ في الصيغة: تعبير الجانب الأيمن لعامل التشغيل '${op}' فارغ.
-                            مثال: '5 ${op} قيمة'`);
-                        }
-
-                        const left = await evaluate(leftExpr, env);
-                        const right = await evaluate(rightExpr, env);
-
-                        switch (op) {
-                            case '+': return typeof left === 'number' && typeof right === 'number' ? left + right : String(left) + String(right);
-                            case '-': return left - right;
-                            case '*': return left * right;
-                            case '/': return left / right;
-                            case '>': return left > right;
-                            case '<': return left < right;
-                            case '==': return left == right;
-                        }
-                    }
-                }
-            }
-
-            // --- Enhanced Error Messaging for Unquoted Keywords ---
-            // If the expression is not a recognized literal (string, number, boolean)
-            // and not a defined variable, check if it's a known keyword that should be quoted.
             if (typeof expression === 'string' && 
                 !expression.startsWith('"') && !expression.endsWith('"') &&
                 !expression.startsWith("'") && !expression.endsWith("'") &&
                 !parseFloat(expression) && !isFinite(expression) &&
                 !env.hasOwnProperty(expression)) {
                 
-                const commonKeywordsToQuote = ["اطبع", "ادخل", "متغير", "اذا", "نفذ", "كرر", "مرات", "بينما", "دالة", "اخرج", "صحيح", "خطأ", "غير_ذلك"]; // تم إضافة غير_ذلك
+                const commonKeywordsToQuote = ["اطبع", "ادخل", "متغير", "اذا", "نفذ", "كرر", "مرات", "بينما", "دالة", "تعريف", "fun", "اخرج", "صحيح", "خطأ", "غير_ذلك", "جلب", "ذكاء_اصطناعي", "استدعاء"];
                 if (commonKeywordsToQuote.includes(expression)) {
-                    throw new Error(`خطأ في الصيغة: الكلمة '${expression}' يبدو أنها كلمة مفتاحية للغة كَلِمْ أو نص.
-                    إذا كنت تقصد نصاً، يرجى إحاطته بعلامات اقتباس مزدوجة (مثال: "${expression}").
-                    إذا كنت تقصد متغيراً، فتأكد من تعريفه مسبقاً.`);
+                    throw {
+                        message: `الكلمة '${expression}' غير صالحة كتعبير.`,
+                        lineNumber: currentExecutingLineNumber,
+                        suggestion: `الكلمة '${expression}' هي كلمة مفتاحية في لغة كَلِمْ أو يجب أن تكون نصاً. إذا كنت تقصد نصاً، يرجى إحاطته بعلامات اقتباس مزدوجة (مثال: "${expression}"). إذا كنت تقصد متغيراً، فتأكد من تعريفه مسبقاً.`
+                    };
                 }
             }
-            // --- End Enhanced Error Messaging ---
 
-            throw new Error(`تعبير غير صالح أو متغير غير معرّف: "${expression}"`);
+            throw {
+                message: `تعبير غير صالح أو متغير غير معرّف: "${expression}".`,
+                lineNumber: currentExecutingLineNumber,
+                suggestion: `تأكد من أن التعبير صحيح نحوياً أو أن المتغير '${expression}' تم تعريفه مسبقاً. قد يكون هناك خطأ إملائي أو نسيان علامات الاقتباس.`
+            };
         }
+
+        CodeMirror.hint.kalim = function(cm) {
+            const cursor = cm.getCursor();
+            const token = cm.getTokenAt(cursor);
+            const start = token.start;
+            const end = cursor.ch;
+            const line = cm.getLine(cursor.line);
+            const currentWord = token.string;
+
+            const keywordsAndFunctions = [
+                "دالة", "تعريف", "fun", "اذا", "نفذ", "كرر", "مرات", "بينما", "اخرج",
+                "صحيح", "خطأ", "غير_ذلك", "متغير", "اطبع", "ادخل", "جلب", "ذكاء_اصطناعي",
+                "عشوائي_بين", "عشوائي_عدد_صحيح", "استدعاء"
+            ];
+
+            const methods = [
+                "فصل"
+            ];
+
+            let list = [];
+
+            keywordsAndFunctions.forEach(kw => {
+                if (kw.startsWith(currentWord)) {
+                    list.push(kw);
+                }
+            });
+
+            const dotMatch = line.substring(0, start).match(/([a-zA-Z\u0600-\u06FF_][a-zA-Z0-9\u0600-\u06FF_]*)\.$/);
+            if (dotMatch) {
+                methods.forEach(method => {
+                    if (method.startsWith(currentWord)) {
+                        list.push({ text: method + "()", displayText: method + "()" });
+                    }
+                });
+            }
+
+            for (const name in globalEnv) {
+                if (name.startsWith(currentWord) && !keywordsAndFunctions.includes(name)) {
+                    if (typeof globalEnv[name] === 'object' && globalEnv[name] !== null && 
+                        (globalEnv[name].type === 'function' || globalEnv[name].type === 'function_value' || name === 'ذكاء_اصطناعي' || name === 'جلب')) {
+                        list.push({ text: name + "()", displayText: name + "()" });
+                    } else if (typeof globalEnv[name] !== 'object') {
+                        list.push(name);
+                    }
+                }
+            }
+
+            list = Array.from(new Set(list)).sort();
+
+            return {
+                list: list,
+                from: CodeMirror.Pos(cursor.line, start),
+                to: CodeMirror.Pos(cursor.line, end)
+            };
+        };
         
-        // --- تهيئة محرر CodeMirror وعناصر الواجهة بعد تحميل DOM بالكامل ---
         document.addEventListener('DOMContentLoaded', () => {
             editor = CodeMirror.fromTextArea(document.getElementById("codeInput"), {
                 lineNumbers: true,
-                mode: "javascript",
+                mode: "kalim",
                 theme: "vscode-dark",
                 lineWrapping: true,
-            });
-            
-            // تأكد من إزالة أي كود افتراضي
-            editor.setValue(``); 
-
-            // إضافة ميزة الإكمال التلقائي
-            editor.on('keypress', function(instance, event) {
-                const ch = event.key;
-                const pairs = {
-                    '"': '"',
-                    "'": "'",
-                    '(': ')',
-                    '[': ']',
-                    '{': '}'
-                };
-
-                if (pairs[ch]) {
-                    const cursor = instance.getCursor();
-                    const line = instance.getLine(cursor.line);
-                    const charAfter = line.charAt(cursor.ch);
-
-                    if (charAfter !== pairs[ch]) {
-                        instance.replaceSelection(pairs[ch]);
-                        instance.setCursor(cursor.line, cursor.ch);
-                    }
+                autoCloseBrackets: true, // Enable auto-close brackets
+                extraKeys: {
+                    "Ctrl-Space": "autocomplete"
+                },
+                hintOptions: {
+                    hint: CodeMirror.hint.kalim,
+                    completeSingle: false
                 }
             });
+            
+            // تم إزالة المحتوى الافتراضي، وترك المحرر فارغاً
+            editor.setValue(''); 
+            
+            globalEnv['ذكاء_اصناعي'] = {
+                توليد_نص: async (prompt) => generateAIContent(prompt, editor.getCursor().line + 1)
+            };
+            globalEnv['جلب'] = async (url) => get(url, editor.getCursor().line + 1);
 
-            // --- المراجع لعناصر الواجهة (تم نقلها هنا لتأكيد الحصول على العناصر بعد تحميل DOM) ---
             const runButton = document.getElementById('runButton');
-            const saveFileButton = document.getElementById('saveFileButton'); // زر حفظ الملف
-            const openFileButton = document.getElementById('openFileButton'); // زر فتح الملف
+            const saveFileButton = document.getElementById('saveFileButton');
+            const openFileButton = document.getElementById('openFileButton');
+            const outputContainer = document.getElementById('outputContainer');
 
-            outputDiv = document.getElementById('output'); // أصبح متغير عام
+            outputDiv = document.getElementById('output');
             const settingsIcon = document.getElementById('settingsIcon');
             const settingsModal = document.getElementById('settingsModal');
             const closeModalButton = document.getElementById('closeModal');
-            inputContainer = document.getElementById('inputContainer'); // أصبح متغير عام
-            promptInput = document.getElementById('promptInput'); // أصبح متغير عام
+            inputContainer = document.getElementById('inputContainer');
+            promptInput = document.getElementById('promptInput');
 
             runButton.addEventListener('click', async () => {
                 const code = editor.getValue();
                 outputDiv.textContent = ''; 
-                const globalEnv = {};
+                if (currentLineHighlight) {
+                    editor.removeLineClass(currentLineHighlight.line, 'background', 'error-highlight');
+                    currentLineHighlight = null;
+                }
+                
                 try {
                     await interpret(code, globalEnv); 
                 } catch (e) {
                     if (e.name === "BreakLoop") {
-                        // هذا يعني أن أمر 'اخرج' تم تنفيذه، فقط اكمل بعد الحلقة
-                        outputDiv.textContent += "\n(تم إنهاء الحلقة بنجاح)";
+                        outputDiv.innerHTML += `<div style="color: #4CAF50;">✅ (تم إنهاء الحلقة بنجاح بواسطة أمر 'اخرج')</div>`;
+                    } else if (e.lineNumber && e.message) {
+                        const errorLine = e.lineNumber;
+                        const errorMessage = e.message;
+                        const errorSuggestion = e.suggestion || "لا يوجد اقتراح محدد لهذا الخطأ.";
+
+                        const errorElement = document.createElement('div');
+                        errorElement.innerHTML = `
+                            <span class="error-message-link" data-line="${errorLine}">❌ خطأ في السطر ${errorLine}: ${errorMessage}</span><br>
+                            <span class="error-suggestion">${errorSuggestion}</span>
+                        `;
+                        errorElement.style.color = '#ff6b6b';
+                        errorElement.style.padding = '5px 0';
+                        outputDiv.appendChild(errorElement);
+
+                        const lineNum = errorLine - 1;
+                        editor.setCursor({ line: lineNum, ch: 0 });
+                        editor.scrollIntoView({ line: lineNum, ch: 0 }, 50);
+
+                        currentLineHighlight = { line: lineNum, handle: editor.addLineClass(lineNum, 'background', 'error-highlight') };
+
                     } else {
-                        outputDiv.textContent += `\n❌ خطأ: ${e.message}\n${e.stack ? e.stack.split('\n')[1] : ''}`;
+                        outputDiv.innerHTML += `<div style="color: #ff6b6b;">❌ خطأ غير متوقع: ${e.message}\n${e.stack ? e.stack.split('\n')[1] : ''}</div>`;
                     }
                 } finally {
                     inputContainer.classList.add('hidden');
                 }
             });
 
-            // إضافة وظيفة حفظ الملف
+            outputDiv.addEventListener('click', (event) => {
+                const target = event.target;
+                if (target.classList.contains('error-message-link')) {
+                    const lineNumber = parseInt(target.dataset.line, 10);
+                    if (!isNaN(lineNumber)) {
+                        const cmLine = lineNumber - 1;
+                        editor.setCursor({ line: cmLine, ch: 0 });
+                        editor.scrollIntoView({ line: cmLine, ch: 0 }, 50);
+
+                        if (currentLineHighlight) {
+                            editor.removeLineClass(currentLineHighlight.line, 'background', 'error-highlight');
+                        }
+                        currentLineHighlight = { line: cmLine, handle: editor.addLineClass(cmLine, 'background', 'error-highlight') };
+                    }
+                }
+            });
+
+
             saveFileButton.addEventListener('click', () => {
                 const codeContent = editor.getValue();
                 const blob = new Blob([codeContent], { type: 'text/plain;charset=utf-8' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = 'script.klm'; // الاسم الافتراضي للملف
+                a.download = 'script.klm';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(a.href);
             });
 
-            // إضافة وظيفة فتح الملف
             openFileButton.addEventListener('click', () => {
                 const fileInput = document.createElement('input');
                 fileInput.type = 'file';
-                fileInput.accept = '.klm'; // السماح فقط بملفات .klm
+                fileInput.accept = '.klm';
                 
                 fileInput.onchange = (e) => {
                     const file = e.target.files[0];
                     if (file) {
                         const reader = new FileReader();
                         reader.onload = (event) => {
-                            editor.setValue(event.target.result); // تحميل المحتوى إلى المحرر
+                            editor.setValue(event.target.result);
                         };
                         reader.onerror = (event) => {
-                            outputDiv.textContent += `\n❌ خطأ في قراءة الملف: ${event.target.error.message}`;
+                            outputDiv.innerHTML += `<div style="color: #ff6b6b;">❌ خطأ في قراءة الملف: ${event.target.error.message}</div>`;
                         };
                         reader.readAsText(file);
                     }
@@ -1044,7 +1462,7 @@
                     }
                 }
             });
-        }); // نهاية DOMContentLoaded
+        });
     </script>
 </body>
 </html>
